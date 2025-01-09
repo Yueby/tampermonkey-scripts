@@ -459,7 +459,6 @@
             'About initial values of shipping cost': '关于运费的初始值',
             'Update Shipping Costs': '更新运费',
 
-
             // 商品管理
             'Add Item': '添加商品',
             '商品リスト管理': '商品列表管理',
@@ -482,8 +481,6 @@
 
             // 商品统计信息
             'Number of people who love it': '喜欢这个商品的人数',
-
-
 
             // 商品发布类型
             '自家通販がしたい': '我想自行销售',
@@ -639,7 +636,6 @@
             // 模态框相关
             'カテゴリを選択': '选择分类',
 
-
             // 3D角色和服务条款
             '3D角色用の推奨項目* を入力する': '输入3D角色的推荐项目*',
             'Terms of Service, update information...': '服务条款、更新信息...',
@@ -681,7 +677,6 @@
             'download contents': '下载内容',
             'sensitive contents': '敏感内容',
 
-
             'and': '和',
             'and the ': '并且',
 
@@ -691,7 +686,6 @@
             'shipping services will ship them internationally': '配送服务会将其国际配送',
             'You should ship the items to the Japanese address': '您需要将商品发送到日本地址',
 
-
             // 添加新的翻译规则
             '商品の公開後、一部の決済手段についてはBOOTH事務局による審査後に初めて利用可能となります。': '商品发布后，部分支付方式需要经过BOOTH事务局审核后才能使用。',
 
@@ -700,7 +694,6 @@
             'また': '并且',
 
             'がございます。': '的情况。',
-
 
             '【注意】二次創作作品のライセンス許諾を受けた販売について': '【注意】关于获得二次创作作品许可的销售',
             '東方Project': '东方Project',
@@ -734,7 +727,6 @@
             // 收益相关
             '领取的金额': '领取的金额',
             'の収益額': '的收益额',
-
 
             // 银行转账相关
             '※銀行振込の場合、振込手数料が引かれた金額が入金されます。': '※银行转账时，将扣除手续费后的金额入账。',
@@ -948,7 +940,49 @@
             // 最近浏览相关
             'Your Recently Viewed Items': '最近浏览的商品',
             'Clear History': '清除历史记录',
-            
+
+            // 下拉菜单翻译
+            'フォロー新着商品': '关注新商品',
+            'フォロー中のショップ': '已关注的店铺',
+            '購入履歴': '购买记录',
+            'ライブラリ': '资料库',
+            'ショップとのメッセージ': '店铺消息',
+            'ショップ管理': '店铺管理',
+            '商品管理': '商品管理',
+            '倉庫サービス': '仓库服务',
+            '注文一覧': '订单列表',
+            '売上管理': '销售管理',
+            'ユーザーとのメッセージ': '用户消息',
+            'BOOTH Apps': 'BOOTH 应用',
+            'アカウント設定': '账号设置',
+            '通知設定': '通知设置',
+            'ログアウト': '退出登录',
+
+            'Cancel': '取消',
+
+            'Genre, Item 名称, etc.': '类型、商品名称等',
+
+            // 订单详情相关
+            'Order detail': '订单详情',
+            'Order Number': '订单编号',
+            'Customer Information': '客户信息',
+            'Contact Customer': '联系客户',
+            '購入者の订单列表': '买家订单列表',
+            'Order Summary': '订单摘要',
+            'Payment Amount': '支付金额',
+            'Payment 费用': '支付手续费',
+            '支払方式': '支付方式',
+            '信用卡': '信用卡',
+
+            // 价格相关
+            '小计': '小计',
+            '总计 価格': '总计金额',
+            '総計': '总计',
+            '費用': '费用',
+
+            // 其他信息
+            '識別コード': '识别码',
+            'の注文': '的订单',  // 例如: "xxx の注文" 会变成 "xxx 的订单"
         };
 
         // 特殊翻译规则 - 为特定选择器添加额外文本
@@ -1132,7 +1166,6 @@
                 'input[type="text"]',
                 'textarea',
 
-
                 // 已有的 badge 选择器
                 '.badge',
                 '.notice',
@@ -1157,6 +1190,23 @@
                 'button.btn span',                    // 按钮内的span文本
                 'div.u-mb-300 .u-tpg-title3',        // 带有特定父元素的标题
 
+                '.js-sp-search-trigger',  // 搜索触发器
+                '.font-bold.absolute.right-0',  // 右侧绝对定位的粗体文本
+
+                // 订单详情页面相关
+                '.typography-16.desktop\\:mb-16',
+                '.typography-16.preserve-half-leading',
+                '.desktop\\:typography-16',
+                '.mobile\\:typography-14',
+                '.text-primary500',
+                '.font-bold.typography-16',
+                '.font-bold.text-right',
+                '.preserve-half-leading',
+
+                // 价格和费用相关
+                '.flex-grow',
+                '.text-right',
+                '.font-bold.preserve-half-leading',
 
             ],
             // 动态内容选择器
@@ -1206,6 +1256,12 @@
                 // 动态表单元素
                 'input[placeholder]',
                 '.nav-reverse span',
+                'input[type="search"]',
+
+                // 订单详情动态内容
+                '.flex.items-center div',
+                '.font-bold.text-primary500',
+                '.flex.flex-row div',
             ],
             // 排除的选择器
             exclude: [
@@ -1329,17 +1385,16 @@
 
             // 翻译属性
             Config.selectors.attributes.translate.forEach(attr => {
-                // 如果是 value 属性，且元素是 select，则跳过
-                if (attr === 'value' && element.tagName.toLowerCase() === 'option') {
-                    return;
-                }
-
                 if (element.hasAttribute(attr)) {
                     const value = element.getAttribute(attr);
-                    const translated = this.translate(value, element);
-                    if (translated !== value) {
-                        element.setAttribute(attr, translated);
-                        hasTranslation = true;
+                    if (value) {  // 确保属性值存在
+                        const translated = this.translate(value, element);
+                        if (translated !== value) {
+                            element.setAttribute(attr, translated);
+                            // 为每个翻译过的属性添加标记
+                            element.setAttribute(`data-translated-${attr}`, 'true');
+                            hasTranslation = true;
+                        }
                     }
                 }
             });
@@ -1558,6 +1613,26 @@
             this.initialized = false;
         }
 
+        // 等待语言选择器加载
+        async waitForLanguageSelector(maxAttempts = 10, interval = 500) {
+            for (let i = 0; i < maxAttempts; i++) {
+                const languageSwitcher = document.querySelector('.js-locale-switcher');
+                const currentLanguage = languageSwitcher?.querySelector('.bg-ui-background200');
+
+                if (currentLanguage) {
+                    const text = currentLanguage.textContent.trim();
+                    console.log('检测到的语言:', text);
+                    return text.includes('简体中文');
+                }
+
+                console.log(`等待语言选择器加载... (${i + 1}/${maxAttempts})`);
+                await new Promise(resolve => setTimeout(resolve, interval));
+            }
+
+            console.log('语言选择器加载超时');
+            return false;
+        }
+
         async start() {
             try {
                 // 等待DOM加载完成
@@ -1565,11 +1640,18 @@
                     await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve));
                 }
 
+                // 等待语言选择器加载并检查语言设置
+                const isChineseUI = await this.waitForLanguageSelector();
+                if (!isChineseUI) {
+                    console.log('当前不是简体中文界面，翻译助手未启动');
+                    return;
+                }
+
                 // 初始化翻译
                 this.translateAll();
 
                 // 启动观察器
-                this.observer.start();  // 现在这里不会报错了
+                this.observer.start();
 
                 this.initialized = true;
                 console.log('Booth翻译助手已启动');
