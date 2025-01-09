@@ -1,13 +1,10 @@
 // ==UserScript==
 // @name         Booth 网站翻译助手
 // @namespace    https://bbs.tampermonkey.net.cn/
-// @version      0.1.0
+// @version      0.1.1
 // @description  自动翻译 Booth 网站的多语言内容为中文
-// @author       You
+// @author       Yueby
 // @match        https://*.booth.pm/*
-// @grant        GM_xmlhttpRequest
-// @grant        GM_addStyle
-// @connect      translate.googleapis.com
 // @run-at       document-idle
 // ==/UserScript==
 
