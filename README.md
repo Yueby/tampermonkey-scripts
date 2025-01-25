@@ -2,7 +2,7 @@
 
 拉💩快人一步！
 
-* 如果你不知道怎么用，点击下方👇
+如果你不知道怎么用，点击下方👇
 
 [使用说明](https://github.com/Yueby/tampermonkey-scripts/blob/main/README.md)
 
