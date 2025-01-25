@@ -1,51 +1,53 @@
-# 为EIP厕所查询功能加入厕所状态监听
+# EIP 厕所状态监听器
 
-拉💩快人一步！
+> 拉💩快人一步！
 
-如果你不知道怎么安装，点击下方👇
+## 📥 安装方法
 
-[安装说明](https://github.com/Yueby/tampermonkey-scripts/blob/main/README.md)
+1. 首先请查看[插件安装说明](https://github.com/Yueby/tampermonkey-scripts/blob/main/README.md)
+2. 安装完插件后，点击[这里安装脚本](https://github.com/Yueby/tampermonkey-scripts/raw/refs/heads/eip-toilet-status-monitor/eip-toilet-status-monitor.user.js)
 
-看完上方使用说明安装插件后点击下面链接即可安装
+## 🎯 使用方法
 
-[安装](https://github.com/Yueby/tampermonkey-scripts/raw/refs/heads/eip-toilet-status-monitor/eip-toilet-status-monitor.user.js)
+1. 进入厕所空位查询标签页，在屏幕右侧可以看到控制图标：
 
-### 使用说明
+   ![控制图标](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/eip-toilet-monitor/open-toggle.png)
 
-进入厕所空位查询标签页，在屏幕右侧可以看到一个图标
+2. 点击图标打开监控面板：
 
-![](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/eip-toilet-monitor/open-toggle.png)
+   ![监控面板](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/eip-toilet-monitor/uipanel.png)
 
-点击可以打开监控页面
+3. 选择想要监听的楼层并开启开关：
 
-![](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/eip-toilet-monitor/uipanel.png)
+   ![监听开关](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/eip-toilet-monitor/monitor-toggle.png)
 
-找一个喜欢的楼层开启开关即可监听
+4. 当厕所状态发生变化时，会收到右下角通知：
 
-![](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/eip-toilet-monitor/monitor-toggle.png)
+   ![状态通知](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/eip-toilet-monitor/notifacation.png)
 
-如果厕所状态有变化，会在右下角发送一个通知提示
+## ✨ 功能特性
 
-![](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/eip-toilet-monitor/notifacation.png)
+### 1. 分类筛选
 
-### 功能介绍
-
-脚本有分类筛选功能，可以筛选楼层与男女厕所
-
-- 楼层筛选
+- **楼层筛选**
   
-  ![](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/eip-toilet-monitor/floor-type.png)
+  ![楼层筛选](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/eip-toilet-monitor/floor-type.png)
 
-- 性别筛选
+- **性别筛选**
   
-  ![](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/eip-toilet-monitor/gender-type.png)
+  ![性别筛选](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/eip-toilet-monitor/gender-type.png)
 
-一键监听筛选厕所功能
+### 2. 一键操作
 
-![](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/eip-toilet-monitor/stop-all-monitor.png)
+- **批量监听控制**
+  
+  ![批量控制](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/eip-toilet-monitor/stop-all-monitor.png)
 
-仅监听空闲厕所功能，只会在厕所空闲时发送通知
+### 3. 智能提醒
 
-![](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/eip-toilet-monitor/freeonly.png)
-
+- **空位提醒**
+  
+  仅在厕所出现空位时发送通知
+  
+  ![空位提醒](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/eip-toilet-monitor/freeonly.png)
 
