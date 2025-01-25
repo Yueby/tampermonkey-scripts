@@ -4,9 +4,9 @@
 
 ## 使用方式
 
-### 脚本可以在以下平台安装：
+### 脚本可以在以下任意平台安装：
 
 点击链接即可跳转插件商店
 
  - <img src="https://github.com/scriptscat/scriptcat/blob/main/build/assets/logo.png" width="16" height="16" /> [脚本猫](https://chromewebstore.google.com/detail/%E8%84%9A%E6%9C%AC%E7%8C%AB/ndcooeababalnlpkfedmmbbbgkljhpjf/reviews?hl=zh-CN&utm_source=ext_sidebar)
- - <img src="https://www.tampermonkey.net/images/icon48.png" width="16" height="16" /> [TamperMonkey](https://chromewebstore.google.com/detail/%E7%AF%A1%E6%94%B9%E7%8C%B4/dhdgffkkebhmkfjojejmpbldmpobfkfo)
+ - <img src="https://www.tampermonkey.net/images/icon48.png" width="16" height="16" /> [TamperMonkey](https://chromewebstore.google.com/detail/%E7%AF%A1%E6%94%B9%E7%8C%B4/dhdgffkkebhmkfjojejmpbldmpobfkfo) （推荐）
