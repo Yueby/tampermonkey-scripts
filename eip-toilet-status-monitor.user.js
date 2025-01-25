@@ -43,7 +43,11 @@
             VACANT: false,    // 空位时有声音提醒
             OCCUPIED: true    // 占用时静音
         },
-        IMAGE: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAABk0lEQVR4nO2XzUoDMRDHc/Eqnj37DN4K4sniQ7TQ6MEH8OS+QPsCevIh+oEmiwWLt548eFAnRetVROwHTJDIWopK0W7TZJvK/ODPkj1k55+ZZDOMEQTxAwl6VwA+SaXNbxIKu3FH55kDClH5qhhVTBoVonJr6oRJcH8F/yV8dGGgmDL4saZOmC74kcgAowxMQiU0I0XaxAsuoUJUbqX+DxxVLoMzkOD0e2TAAkkZ+AaVkAVS6bZUuC8ezHryHI0n36WdLPNTyClkYNHIZS8hXh+YLFSqDbp79V5+aQ18qtZ30paSAW65+qVab8d5BiRgb5aNbCvngY+RgJ2lNiAUVv0bwFdvBiTggXcDoG+8GWjcmlUB+OLTgAB9zHwSKzz0aeD8Xm97NdBumxWp9LWf1ccLlgUx4KYEfHdb+/h8djfcYFkhQZ+6DD4GzLEsiQFzrsom05Uf0+yYNauAFb4lR6UAfeJ9w07D6qpcHW6xUOBWV+V+k4UCt21YQskCt25YAskCn6dtDCELfK62MZAsEMQ/5gPhdLoNMMkO2wAAAABJRU5ErkJggg=='
+        IMAGES: [
+            'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAABk0lEQVR4nO2XzUoDMRDHc/Eqnj37DN4K4sniQ7TQ6MEH8OS+QPsCevIh+oEmiwWLt548eFAnRetVROwHTJDIWopK0W7TZJvK/ODPkj1k55+ZZDOMEQTxAwl6VwA+SaXNbxIKu3FH55kDClH5qhhVTBoVonJr6oRJcH8F/yV8dGGgmDL4saZOmC74kcgAowxMQiU0I0XaxAsuoUJUbqX+DxxVLoMzkOD0e2TAAkkZ+AaVkAVS6bZUuC8ezHryHI0n36WdLPNTyClkYNHIZS8hXh+YLFSqDbp79V5+aQ18qtZ30paSAW65+qVab8d5BiRgb5aNbCvngY+RgJ2lNiAUVv0bwFdvBiTggXcDoG+8GWjcmlUB+OLTgAB9zHwSKzz0aeD8Xm97NdBumxWp9LWf1ccLlgUx4KYEfHdb+/h8djfcYFkhQZ+6DD4GzLEsiQFzrsom05Uf0+yYNauAFb4lR6UAfeJ9w07D6qpcHW6xUOBWV+V+k4UCt21YQskCt25YAskCn6dtDCELfK62MZAsEMQ/5gPhdLoNMMkO2wAAAABJRU5ErkJggg==',
+        ],
+        // 随机图标的概率 (0-1之间)
+        RANDOM_ICON_PROBABILITY: 0.2
     };
 
     // 简化事件
@@ -108,14 +112,14 @@
                 top: 50%;
                 transform: translateY(-50%);
                 background: white;
-                padding: 20px;
+                padding: 15px;
                 border-radius: 8px;
                 box-shadow: 0 2px 10px rgba(0,0,0,0.1);
                 z-index: 9999;
                 min-width: 600px;
                 width: fit-content;
                 max-width: calc(100vw - 40px);
-                height: 720px;           /* 调整高度，考虑所有间距 */
+                height: 740px;           /* 微调面板总高度 */
                 display: none;
                 overflow: hidden;
             }
@@ -129,8 +133,8 @@
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                margin-bottom: 15px;
-                padding-bottom: 10px;
+                margin-bottom: 10px;  /* 减小头部下边距 */
+                padding-bottom: 8px;  /* 减小分隔线上边距 */
                 border-bottom: 1px solid #eee;
             }
 
@@ -159,7 +163,7 @@
             .toilet-panel-filters {
                 display: flex;
                 gap: 20px;
-                margin-bottom: 15px;
+                margin-bottom: 10px;  /* 减小筛选器下边距 */
                 align-items: center;
                 justify-content: space-between;  /* 改为两端对齐 */
             }
@@ -203,16 +207,6 @@
 
             .monitor-all-btn.stop:hover {
                 background: #d32f2f;
-            }
-
-            .toilet-panel-content {
-                display: grid;
-                grid-template-columns: repeat(2, minmax(280px, 1fr));
-                gap: 20px;              /* 卡片之间的间距 */
-                overflow-y: auto;
-                padding-right: 10px;
-                flex: 1;
-                height: calc(100% - 120px);
             }
 
             /* 美化滚动条 */
@@ -259,7 +253,7 @@
             .toilet-type {
                 background: white;
                 border-radius: 8px;
-                padding: 12px;
+                padding: 12px;  /* 减小类型区域内边距 */
                 margin-bottom: 12px;
                 box-shadow: 0 1px 3px rgba(0,0,0,0.02);  /* 轻微的阴影 */
             }
@@ -301,12 +295,12 @@
             .toilet-rooms {
                 display: flex;
                 flex-wrap: wrap;
-                gap: 10px;
-                margin-top: 10px;                /* 与开关保持一定距离 */
+                gap: 8px;  /* 减小房间之间的间距 */
+                margin-top: 8px;  /* 减小与标题的间距 */
             }
 
             .toilet-room {
-                padding: 6px 12px;
+                padding: 6px 12px;  /* 调整房间号内边距 */
                 border-radius: 6px;
                 font-size: 14px;
                 transition: all 0.2s ease;
@@ -456,11 +450,58 @@
                 fill: #1890ff;
             }
 
-            /* 纵向布局样式 */
+            /* 通用卡片样式 */
+            .toilet-floor {
+                width: 100%;
+                height: fit-content;
+                margin: 0 auto;
+            }
+
+            .toilet-type {
+                height: fit-content;
+                margin: 0;  /* 移除默认margin */
+                padding: 15px;  /* 使用padding代替margin */
+            }
+
+            .toilet-type:not(.hidden) + .toilet-type:not(.hidden) {
+                margin-top: 15px;  /* 只在相邻的可见类型之间添加间距 */
+            }
+
+            .toilet-type.hidden {
+                display: none;
+                margin: 0;  /* 确保隐藏时没有margin */
+                padding: 0;  /* 确保隐藏时没有padding */
+            }
+
+            .toilet-rooms {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 15px;  /* 减小卡片之间的间距 */
+                margin-top: 15px;
+            }
+
+            /* 网格布局样式 */
+            .toilet-panel-content {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(280px, 1fr));
+                gap: 15px;  /* 减小卡片之间的间距 */
+                overflow-y: auto;
+                padding-right: 8px;  /* 减小滚动条边距 */
+                flex: 1;
+                height: calc(100% - 120px);
+                align-items: start;
+                grid-auto-rows: min-content;  /* 行高自适应内容 */
+                grid-auto-flow: dense;        /* 自动填充空白区域 */
+            }
+
+            /* 列表布局样式 */
             .toilet-panel-content.vertical {
-                grid-template-columns: minmax(280px, 480px);  /* 调整为合适的宽度 */
+                grid-template-columns: minmax(280px, 480px);
                 justify-content: center;
                 height: calc(100% - 120px);
+                align-items: start;
+                grid-auto-flow: row;          /* 列表布局保持纵向排列 */
+                gap: 15px;
             }
 
             .toilet-panel-content.vertical .toilet-floor {
@@ -745,12 +786,12 @@
             layoutToggle.addEventListener('click', () => {
                 const content = this.panel.querySelector('.toilet-panel-content');
                 const isVertical = content.classList.toggle('vertical');
-                
+
                 // 更新按钮状态
                 layoutToggle.classList.toggle('active', isVertical);
                 const gridIcon = layoutToggle.querySelector('.grid-icon');
                 const listIcon = layoutToggle.querySelector('.list-icon');
-                
+
                 if (isVertical) {
                     gridIcon.style.display = 'none';
                     listIcon.style.display = 'block';
@@ -1223,7 +1264,7 @@
                     NOTIFICATION.TITLE.VACANT :
                     NOTIFICATION.TITLE.OCCUPIED,
                 text: message,
-                image: NOTIFICATION.IMAGE,  // 添加图标
+                image: this._getNotificationIcon(),  // 使用随机图标
                 highlight: newStatus === STATUS.VACANT ? NOTIFICATION.HIGHLIGHT : false,
                 silent: newStatus === STATUS.VACANT ?
                     NOTIFICATION.SILENT.VACANT :
@@ -1238,6 +1279,17 @@
         _generateNotificationMessage(floor, type, room, oldStatus, newStatus) {
             // 简化消息内容
             return `${floor}层${type} ${room.number}号`;
+        }
+
+        _getNotificationIcon() {
+            // 默认使用第一个图标
+            if (Math.random() >= NOTIFICATION.RANDOM_ICON_PROBABILITY || NOTIFICATION.IMAGES.length === 1) {
+                return NOTIFICATION.IMAGES[0];
+            }
+            
+            // 随机选择除第一个之外的其他图标
+            const randomIndex = Math.floor(Math.random() * (NOTIFICATION.IMAGES.length - 1)) + 1;
+            return NOTIFICATION.IMAGES[randomIndex];
         }
     }
 
