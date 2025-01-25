@@ -33,7 +33,7 @@
 脚本有分类筛选功能，可以筛选楼层与男女厕所
 
 - 楼层筛选
-- 
+  
   ![](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/eip-toilet-monitor/floor-type.png)
 
 - 性别筛选
