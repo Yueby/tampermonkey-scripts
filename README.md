@@ -2,4 +2,4 @@
 
 拉💩快人一步！
 
-[](https://github.com/Yueby/tampermonkey-scripts/blob/main/README.md)
+[使用说明](https://github.com/Yueby/tampermonkey-scripts/blob/main/README.md)
