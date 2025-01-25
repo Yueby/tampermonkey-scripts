@@ -15,3 +15,11 @@
 进入厕所空位查询标签页，在屏幕右侧可以看到一个图标
 
 ![](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/eip-toilet-monitor/open-toggle.png)
+
+点击可以打开监控页面
+
+![](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/eip-toilet-monitor/uipanel.png)
+
+找一个喜欢的楼层开启开关即可监听
+
+![](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/eip-toilet-monitor/monitor-toggle.png)
