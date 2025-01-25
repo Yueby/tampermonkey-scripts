@@ -1,2 +1,1 @@
-# tampermonkey-scripts
- 
+# 为Booth简体中文补全文本翻译，仅中文模式翻译
