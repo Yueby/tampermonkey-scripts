@@ -1,21 +1,29 @@
-# 使用方式
+# 安装指南
 
-### 脚本可以在以下任意平台安装：
+## 第一步：安装浏览器插件
 
-点击链接即可跳转插件商店
+选择以下任一插件进行安装：
 
- - <img src="https://github.com/scriptscat/scriptcat/blob/main/build/assets/logo.png" width="16" height="16" /> [脚本猫](https://chromewebstore.google.com/detail/%E8%84%9A%E6%9C%AC%E7%8C%AB/ndcooeababalnlpkfedmmbbbgkljhpjf/reviews?hl=zh-CN&utm_source=ext_sidebar) （推荐）
+### 推荐选择
+<img src="https://github.com/scriptscat/scriptcat/blob/main/build/assets/logo.png" width="20" height="20" align="center" /> **脚本猫**  
+[![Chrome商店](https://img.shields.io/badge/Chrome商店-安装-blue)](https://chromewebstore.google.com/detail/%E8%84%9A%E6%9C%AC%E7%8C%AB/ndcooeababalnlpkfedmmbbbgkljhpjf)
 
-![](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/main/scriptcat-chromewebstore-demo.png)
+![脚本猫安装界面](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/main/scriptcat-chromewebstore-demo.png)
 
- - <img src="https://www.tampermonkey.net/images/icon48.png" width="16" height="16" /> [TamperMonkey](https://chromewebstore.google.com/detail/%E7%AF%A1%E6%94%B9%E7%8C%B4/dhdgffkkebhmkfjojejmpbldmpobfkfo)
+### 备选方案
+<img src="https://www.tampermonkey.net/images/icon48.png" width="20" height="20" align="center" /> **Tampermonkey**  
+[![Chrome商店](https://img.shields.io/badge/Chrome商店-安装-blue)](https://chromewebstore.google.com/detail/%E7%AF%A1%E6%94%B9%E7%8C%B4/dhdgffkkebhmkfjojejmpbldmpobfkfo)
 
-![](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/main/tampermonkey-chromewebstore-demo.png)
+![Tampermonkey安装界面](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/main/tampermonkey-chromewebstore-demo.png)
 
-然后就会在右上角的插件图标里看到它👇
+## 第二步：安装脚本
 
-![](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/main/extension-tip.png)
+1. 安装完成后，浏览器右上角会出现插件图标：
 
-接下来就可以将脚本链接粘贴到浏览器地址栏了，插件会自动识别提示安装
+   ![插件图标](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/main/extension-tip.png)
 
-![](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/main/install-script-demo.png)
+2. 将脚本链接粘贴到浏览器地址栏，插件会自动识别并提示安装：
+
+   ![脚本安装提示](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/main/install-script-demo.png)
+
+3. 点击"安装"按钮完成安装。
