@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         厕所空位查询增强
 // @namespace    http://tampermonkey.net/
-// @version      0.2.1
+// @version      0.2.2
 // @description  增强厕所空位查询功能
 // @author       Yueby
 // @match        https://eip.skyunion.net/*
@@ -40,14 +40,16 @@
         },
         HIGHLIGHT: true,
         SILENT: {
-            VACANT: false,    // 空位时有声音提醒
-            OCCUPIED: true    // 占用时静音
+            VACANT: false,
+            OCCUPIED: true
         },
         IMAGES: [
-            'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAABk0lEQVR4nO2XzUoDMRDHc/Eqnj37DN4K4sniQ7TQ6MEH8OS+QPsCevIh+oEmiwWLt548eFAnRetVROwHTJDIWopK0W7TZJvK/ODPkj1k55+ZZDOMEQTxAwl6VwA+SaXNbxIKu3FH55kDClH5qhhVTBoVonJr6oRJcH8F/yV8dGGgmDL4saZOmC74kcgAowxMQiU0I0XaxAsuoUJUbqX+DxxVLoMzkOD0e2TAAkkZ+AaVkAVS6bZUuC8ezHryHI0n36WdLPNTyClkYNHIZS8hXh+YLFSqDbp79V5+aQ18qtZ30paSAW65+qVab8d5BiRgb5aNbCvngY+RgJ2lNiAUVv0bwFdvBiTggXcDoG+8GWjcmlUB+OLTgAB9zHwSKzz0aeD8Xm97NdBumxWp9LWf1ccLlgUx4KYEfHdb+/h8djfcYFkhQZ+6DD4GzLEsiQFzrsom05Uf0+yYNauAFb4lR6UAfeJ9w07D6qpcHW6xUOBWV+V+k4UCt21YQskCt25YAskCn6dtDCELfK62MZAsEMQ/5gPhdLoNMMkO2wAAAABJRU5ErkJggg==',
+            // 基础图标
+            'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAABk0lEQVR4nO2XzUoDMRDHc/Eqnj37DN4K4sniQ7TQ6MEH8OS+QPsCevIh+oEmiwWLt548eFAnRetVROwHTJDIWopK0W7TZJvK/ODPkj1k55+ZZDOMEQTxAwl6VwA+SaXNbxIKu3FH55kDClH5qhhVTBoVonJr6oRJcH8F/yV8dGGgmDL4saZOmC74kcgAowxMQiU0I0XaxAsuoUJUbqX+DxxVLoMzkOD0e2TAAkkZ+AaVkAVS6bZUuC8ezHryHI0n36WdLPNTyClkYNHIZS8hXh+YLFSqDbp79V5+aQ18qtZ30paSAW65+qVab8d5BiRgb5aNbCvngY+RgJ2lNiAUVv0bwFdvBiTggXcDoG+8GWjcmlUB+OLTgAB9zHwSKzz0aeD8Xm97NdBumxWp9LWf1ccLlgUx4KYEfHdb+/h8djfcYFkhQZ+6DD4GzLEsiQFzrsom05Uf0+yYNauAFb4lR6UAfeJ9w07D6qpcHW6xUOBWV+V+k4UCt21YQskCt25YAskCn6dtDCELfK62MZAsEMQ/5gPhdLoNMMkO2wAAAABJRU5ErkJggg=='
         ],
-        // 随机图标的概率 (0-1之间)
-        RANDOM_ICON_PROBABILITY: 0.2
+        RANDOM_ICON_PROBABILITY: 0.1,
+        // 添加远程图标列表的URL
+        REMOTE_ICONS_URL: 'https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/eip-toilet-status-monitor/img/list.json'
     };
 
     // 简化事件
@@ -1124,6 +1126,7 @@
             this.lastNotification = null;
             this.notificationQueue = [];
             this.isProcessingQueue = false;
+            this.hasLoadedIcons = false;
             this._setupEventListeners();
         }
 
@@ -1160,6 +1163,7 @@
         async _handleTabOpen(e) {
             try {
                 this.iframeDoc = await this._waitForIframeContent(e.detail.iframe);
+                await this._loadRemoteIcons();  // 在这里加载图标
                 this._init();
                 this.startMonitoring();
             } catch (error) {
@@ -1291,6 +1295,21 @@
             const randomIndex = Math.floor(Math.random() * (NOTIFICATION.IMAGES.length - 1)) + 1;
             return NOTIFICATION.IMAGES[randomIndex];
         }
+
+        async _loadRemoteIcons() {
+            if (this.hasLoadedIcons) return;  // 如果已加载过就直接返回
+            
+            try {
+                const response = await fetch(NOTIFICATION.REMOTE_ICONS_URL);
+                const icons = await response.json();
+                // 将远程图标添加到现有图标列表中
+                NOTIFICATION.IMAGES.push(...icons);
+                this.hasLoadedIcons = true;  // 标记为已加载
+                console.log('远程图标加载成功:', icons);
+            } catch (error) {
+                console.error('加载远程图标失败:', error);
+            }
+        }
     }
 
     // 标签监听器
@@ -1367,7 +1386,18 @@
         }
     }
 
-    // 初始化
-    new ToiletManager();
-    new TabWatcher();
+    // 修改初始化部分
+    let manager = null;
+    let watcher = null;
+
+    function init() {
+        if (!manager) {
+            manager = new ToiletManager();
+        }
+        if (!watcher) {
+            watcher = new TabWatcher();
+        }
+    }
+
+    init();
 })(); 
