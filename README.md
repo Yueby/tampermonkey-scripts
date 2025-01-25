@@ -4,5 +4,5 @@
 
 # 使用方式
 
-脚本可以在 ![](https://chromewebstore.google.com/detail/%E8%84%9A%E6%9C%AC%E7%8C%AB/ndcooeababalnlpkfedmmbbbgkljhpjf/reviews?hl=zh-CN&utm_source=ext_sidebar)
+脚本可以在 ![脚本猫](https://github.com/scriptscat/scriptcat/blob/main/build/assets/logo.png)
 ![link](https://chromewebstore.google.com/detail/%E8%84%9A%E6%9C%AC%E7%8C%AB/ndcooeababalnlpkfedmmbbbgkljhpjf/reviews?hl=zh-CN&utm_source=ext_sidebar) 脚本猫
