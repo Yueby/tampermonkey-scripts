@@ -39,3 +39,13 @@
 - 性别筛选
   
   ![](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/eip-toilet-monitor/gender-type.png)
+
+一键监听筛选厕所功能
+
+![](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/eip-toilet-monitor/stop-all-monitor.png)
+
+仅监听空闲厕所功能，只会在厕所空闲时发送通知
+
+![](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/eip-toilet-monitor/freeonly.png)
+
+
