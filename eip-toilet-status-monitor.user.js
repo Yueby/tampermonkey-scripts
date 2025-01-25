@@ -32,6 +32,20 @@
         }
     };
 
+    // 修改通知配置
+    const NOTIFICATION = {
+        TITLE: {
+            VACANT: '有空位啦！',
+            OCCUPIED: '被占用了'
+        },
+        HIGHLIGHT: true,
+        SILENT: {
+            VACANT: false,    // 空位时有声音提醒
+            OCCUPIED: true    // 占用时静音
+        },
+        IMAGE: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAABk0lEQVR4nO2XzUoDMRDHc/Eqnj37DN4K4sniQ7TQ6MEH8OS+QPsCevIh+oEmiwWLt548eFAnRetVROwHTJDIWopK0W7TZJvK/ODPkj1k55+ZZDOMEQTxAwl6VwA+SaXNbxIKu3FH55kDClH5qhhVTBoVonJr6oRJcH8F/yV8dGGgmDL4saZOmC74kcgAowxMQiU0I0XaxAsuoUJUbqX+DxxVLoMzkOD0e2TAAkkZ+AaVkAVS6bZUuC8ezHryHI0n36WdLPNTyClkYNHIZS8hXh+YLFSqDbp79V5+aQ18qtZ30paSAW65+qVab8d5BiRgb5aNbCvngY+RgJ2lNiAUVv0bwFdvBiTggXcDoG+8GWjcmlUB+OLTgAB9zHwSKzz0aeD8Xm97NdBumxWp9LWf1ccLlgUx4KYEfHdb+/h8djfcYFkhQZ+6DD4GzLEsiQFzrsom05Uf0+yYNauAFb4lR6UAfeJ9w07D6qpcHW6xUOBWV+V+k4UCt21YQskCt25YAskCn6dtDCELfK62MZAsEMQ/5gPhdLoNMMkO2wAAAABJRU5ErkJggg=='
+    };
+
     // 简化事件
     const EVENTS = {
         TAB_OPENED: 'toiletTabOpened',
@@ -122,6 +136,20 @@
                 gap: 20px;
                 margin-bottom: 15px;
                 align-items: center;
+                justify-content: space-between;  /* 改为两端对齐 */
+            }
+
+            .filter-group {
+                display: flex;
+                gap: 20px;
+                align-items: center;
+            }
+
+            .monitor-group {
+                display: flex;
+                gap: 20px;
+                align-items: center;
+                margin-left: auto;  /* 推到右侧 */
             }
 
             .toilet-filter select {
@@ -216,10 +244,25 @@
                 margin-bottom: 0;
             }
 
+            .toilet-type-header {
+                display: flex;
+                justify-content: space-between;  /* 两端对齐 */
+                align-items: center;
+                margin-bottom: 10px;
+            }
+
+            .toilet-type-info {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;  /* 修改为两端对齐 */
+                width: 100%;                     /* 占满整行 */
+                padding-right: 10px;             /* 右侧留点间距 */
+            }
+
             .toilet-type-title {
-                font-weight: 500;  /* 稍微减轻字重 */
+                font-weight: 500;
                 color: #495057;
-                margin-bottom: 8px;
+                margin-right: 10px;              /* 标题右侧间距 */
             }
 
             .toilet-type-stats {
@@ -235,6 +278,7 @@
                 display: flex;
                 flex-wrap: wrap;
                 gap: 10px;
+                margin-top: 10px;                /* 与开关保持一定距离 */
             }
 
             .toilet-room {
@@ -266,25 +310,12 @@
                 display: none;
             }
 
-            .toilet-type-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-
-            .toilet-type-info {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-            }
-
-            /* 开关样式 */
             .toilet-monitor-toggle {
                 position: relative;
                 display: inline-block;
                 width: 40px;
                 height: 20px;
-                margin-left: 10px;
+                margin-left: auto;               /* 推到最右侧 */
             }
 
             .toilet-monitor-toggle input {
@@ -367,13 +398,6 @@
                 height: 0;
             }
         `
-    };
-
-    // 添加在配置区域
-    const NOTIFICATION = {
-        TITLE: '厕所状态变化',
-        TIMEOUT: 3000,  // 通知显示时间（毫秒）
-        TAG: 'toilet-notification'  // 添加通知标签
     };
 
     // 厕所坑位类
@@ -513,7 +537,7 @@
                 this.trigger.className = 'toilet-panel-trigger';
                 this.trigger.innerHTML = '🚽';
                 document.body.appendChild(this.trigger);
-                
+
                 // 添加点击事件
                 this.trigger.addEventListener('click', () => {
                     this.toggle();
@@ -531,22 +555,30 @@
                         <div class="toilet-panel-close">✕</div>
                     </div>
                     <div class="toilet-panel-filters">
-                        <div class="toilet-filter">
-                            <label>楼层:</label>
-                            <select class="floor-filter">
-                                <option value="all">全部</option>
-                            </select>
+                        <div class="filter-group">
+                            <div class="toilet-filter">
+                                <label>楼层:</label>
+                                <select class="floor-filter">
+                                    <option value="all">全部</option>
+                                </select>
+                            </div>
+                            <div class="toilet-filter">
+                                <label>类型:</label>
+                                <select class="type-filter">
+                                    <option value="all">全部</option>
+                                    <option value="男厕">男厕</option>
+                                    <option value="女厕">女厕</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="toilet-filter">
-                            <label>类型:</label>
-                            <select class="type-filter">
-                                <option value="all">全部</option>
-                                <option value="男厕">男厕</option>
-                                <option value="女厕">女厕</option>
-                            </select>
-                        </div>
-                        <button class="monitor-all-btn">监听筛选结果</button>
-                        <div class="monitor-options">
+                        <div class="monitor-group">
+                            <label class="monitor-option-toggle" title="监听筛选结果">
+                                监听筛选结果
+                                <label class="toilet-monitor-toggle">
+                                    <input type="checkbox" class="monitor-all-checkbox">
+                                    <span class="toilet-monitor-slider"></span>
+                                </label>
+                            </label>
                             <label class="monitor-option-toggle" title="仅在厕所变为空闲时发送通知">
                                 仅监听空闲
                                 <label class="toilet-monitor-toggle">
@@ -554,8 +586,8 @@
                                     <span class="toilet-monitor-slider"></span>
                                 </label>
                             </label>
+                            <button class="test-button">模拟状态变化</button>
                         </div>
-                        <button class="test-button">模拟状态变化</button>
                     </div>
                     <div class="toilet-panel-content"></div>
                 `;
@@ -589,16 +621,11 @@
                 this._applyFilters();
             });
 
-            // 添加全部监听按钮事件
-            const monitorAllBtn = this.panel.querySelector('.monitor-all-btn');
-            monitorAllBtn.addEventListener('click', () => {
+            // 修改监听全部按钮事件
+            const monitorAllCheckbox = this.panel.querySelector('.monitor-all-checkbox');
+            monitorAllCheckbox.addEventListener('change', () => {
                 const visibleTypes = this._getVisibleTypes();
-                const checkedCount = visibleTypes.filter(type =>
-                    type.querySelector('.monitor-checkbox').checked
-                ).length;
-
-                // 根据当前状态决定是全部开启还是全部关闭
-                const shouldCheck = checkedCount === 0;
+                const shouldCheck = monitorAllCheckbox.checked;
 
                 visibleTypes.forEach(typeEl => {
                     const checkbox = typeEl.querySelector('.monitor-checkbox');
@@ -607,8 +634,6 @@
                         checkbox.dispatchEvent(new Event('change'));
                     }
                 });
-
-                this._updateMonitorAllButton();
             });
 
             // 监听每个单独的开关变化
@@ -848,34 +873,24 @@
         }
 
         _updateMonitorAllButton() {
-            const monitorAllBtn = this.panel.querySelector('.monitor-all-btn');
+            const monitorAllCheckbox = this.panel.querySelector('.monitor-all-checkbox');
             const visibleTypes = this._getVisibleTypes();
 
             if (visibleTypes.length === 0) {
-                // 没有可见的类型时禁用按钮
-                monitorAllBtn.disabled = true;
-                monitorAllBtn.textContent = '无可监听内容';
+                monitorAllCheckbox.disabled = true;
+                monitorAllCheckbox.parentElement.title = '无可监听内容';
                 return;
             }
 
-            monitorAllBtn.disabled = false;
+            monitorAllCheckbox.disabled = false;
+            monitorAllCheckbox.parentElement.title = '监听筛选结果';
+
             const checkedCount = visibleTypes.filter(type =>
                 type.querySelector('.monitor-checkbox').checked
             ).length;
 
-            if (checkedCount === 0) {
-                // 没有任何监听时
-                monitorAllBtn.classList.remove('stop');
-                monitorAllBtn.textContent = '监听筛选结果';
-            } else if (checkedCount === visibleTypes.length) {
-                // 全部都在监听时
-                monitorAllBtn.classList.add('stop');
-                monitorAllBtn.textContent = '停止所有监听';
-            } else {
-                // 部分监听时
-                monitorAllBtn.classList.add('stop');
-                monitorAllBtn.textContent = `停止监听(${checkedCount}/${visibleTypes.length})`;
-            }
+            monitorAllCheckbox.checked = checkedCount === visibleTypes.length;
+            monitorAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < visibleTypes.length;
         }
 
         _getVisibleTypes() {
@@ -896,7 +911,7 @@
             // 随机选择一个房间
             const randomRoom = visibleRooms[Math.floor(Math.random() * visibleRooms.length)];
             const isOccupied = randomRoom.classList.contains('occupied');
-            
+
             // 获取房间信息
             const floorEl = randomRoom.closest('.toilet-floor');
             const typeEl = randomRoom.closest('.toilet-type');
@@ -914,7 +929,7 @@
                     const oldStatus = room.status;
                     room.status = newStatus;
                     room.lastStatus = newStatus;
-                    
+
                     // 触发回调
                     if (room.onStatusChange) {
                         room.onStatusChange(oldStatus, newStatus);
@@ -941,10 +956,10 @@
             // 重置所有开关和筛选器
             this.panel.querySelectorAll('.monitor-checkbox, .only-vacant-toggle')
                 .forEach(checkbox => checkbox.checked = false);
-            
+
             this.panel.querySelectorAll('select')
                 .forEach(filter => filter.value = 'all');
-            
+
             // 重置状态
             this.currentFloor = 'all';
             this.currentType = 'all';
@@ -983,7 +998,7 @@
             document.addEventListener('TOILET_MONITOR_TOGGLE', (e) => {
                 const { floor, type, isActive } = e.detail;
                 console.log(`监听状态变化: ${floor}层${type} ${isActive ? '开启' : '关闭'}监听`);
-                
+
                 const monitorKey = `${floor}-${type}`;
                 if (isActive) {
                     this.startSpecificMonitor(floor, type);
@@ -1023,7 +1038,7 @@
             // 初始化新数据
             const toiletMaps = this.iframeDoc.querySelectorAll(CONFIG.SELECTORS.TOILET_MAPS);
             this.floors = Array.from(toiletMaps).map(el => new FloorToilet(el));
-            
+
             // 重置UI状态（只调用一次）
             this.ui._resetUIState();
 
@@ -1097,62 +1112,26 @@
             }
 
             const message = this._generateNotificationMessage(floor, type, room, oldStatus, newStatus);
-            this._queueNotification(message);
-        }
-
-        _queueNotification(message) {
-            this.notificationQueue.push(message);
-            if (!this.isProcessingQueue) {
-                this._processNotificationQueue();
-            }
-        }
-
-        async _processNotificationQueue() {
-            if (this.isProcessingQueue || this.notificationQueue.length === 0) return;
-
-            this.isProcessingQueue = true;
-            
-            while (this.notificationQueue.length > 0) {
-                const message = this.notificationQueue[0];
-
-                if (this.lastNotification) {
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    this.lastNotification?.close();
+            GM_notification({
+                title: newStatus === STATUS.VACANT ?
+                    NOTIFICATION.TITLE.VACANT :
+                    NOTIFICATION.TITLE.OCCUPIED,
+                text: message,
+                image: NOTIFICATION.IMAGE,  // 添加图标
+                highlight: newStatus === STATUS.VACANT ? NOTIFICATION.HIGHLIGHT : false,
+                silent: newStatus === STATUS.VACANT ?
+                    NOTIFICATION.SILENT.VACANT :
+                    NOTIFICATION.SILENT.OCCUPIED,
+                onclick: () => {
+                    window.focus();
+                    this.ui.show();
                 }
-
-                try {
-                    await new Promise((resolve, reject) => {
-                        GM_notification({
-                            title: NOTIFICATION.TITLE,
-                            text: message,
-                            timeout: NOTIFICATION.TIMEOUT,
-                            tag: NOTIFICATION.TAG,
-                            onclick: () => {
-                                window.focus();
-                                this.ui.show();
-                            },
-                            ondone: () => {
-                                this.lastNotification = null;
-                                resolve();
-                            }
-                        }, notification => {
-                            this.lastNotification = notification;
-                        });
-                    });
-                } catch (error) {
-                    console.error('发送通知失败:', error);
-                    this.lastNotification = null;
-                }
-
-                this.notificationQueue.shift();
-            }
-
-            this.isProcessingQueue = false;
+            });
         }
 
         _generateNotificationMessage(floor, type, room, oldStatus, newStatus) {
-            const statusText = newStatus === STATUS.OCCUPIED ? '被占用了' : '空闲了';
-            return `${floor}层${type} ${room.number}号 ${statusText}`;
+            // 简化消息内容
+            return `${floor}层${type} ${room.number}号`;
         }
     }
 
@@ -1217,8 +1196,8 @@
                             // 点击刷新按钮时，先触发关闭事件
                             document.dispatchEvent(new CustomEvent(EVENTS.TAB_CLOSED));
                             setTimeout(() => {
-                                document.dispatchEvent(new CustomEvent(EVENTS.TAB_OPENED, { 
-                                    detail: { iframe: this.currentIframe } 
+                                document.dispatchEvent(new CustomEvent(EVENTS.TAB_OPENED, {
+                                    detail: { iframe: this.currentIframe }
                                 }));
                             }, 100);
                         });
@@ -1233,5 +1212,4 @@
     // 初始化
     new ToiletManager();
     new TabWatcher();
-
 })(); 
