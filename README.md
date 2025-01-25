@@ -23,3 +23,15 @@
 找一个喜欢的楼层开启开关即可监听
 
 ![](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/eip-toilet-monitor/monitor-toggle.png)
+
+如果厕所状态有变化，会在右下角发送一个通知提示
+
+![](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/eip-toilet-monitor/notifacation.png)
+
+### 功能介绍
+
+脚本有分类筛选功能，可以筛选楼层与男女厕所
+
+- 楼层筛选 ![](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/eip-toilet-monitor/floor-type.png)
+
+- 性别筛选 ![](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/pic/eip-toilet-monitor/gender-type.png)
