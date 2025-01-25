@@ -13,3 +13,5 @@
 ![](https://github.com/Yueby/tampermonkey-scripts/blob/pic/eip-toilet-status-monitor/scriptcat-chromewebstore-demo.png)
 
  - <img src="https://www.tampermonkey.net/images/icon48.png" width="16" height="16" /> [TamperMonkey](https://chromewebstore.google.com/detail/%E7%AF%A1%E6%94%B9%E7%8C%B4/dhdgffkkebhmkfjojejmpbldmpobfkfo)
+
+![](https://github.com/Yueby/tampermonkey-scripts/blob/pic/eip-toilet-status-monitor/tampermonkey-chromewebstore-demo.png)
