@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         厕所空位查询增强
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      0.2
 // @description  增强厕所空位查询功能
 // @author       Yueby
 // @match        https://eip.skyunion.net/*
