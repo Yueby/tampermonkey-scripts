@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         厕所空位查询增强
 // @namespace    http://tampermonkey.net/
-// @version      0.2
+// @version      0.2.1
 // @description  增强厕所空位查询功能
 // @author       Yueby
 // @match        https://eip.skyunion.net/*
@@ -112,10 +112,10 @@
                 border-radius: 8px;
                 box-shadow: 0 2px 10px rgba(0,0,0,0.1);
                 z-index: 9999;
-                min-width: 600px;  /* 最小宽度 */
-                width: fit-content;  /* 根据内容自适应宽度 */
-                max-width: calc(100vw - 40px);  /* 最大宽度为视窗宽度减去左右边距 */
-                max-height: 90vh;
+                min-width: 600px;
+                width: fit-content;
+                max-width: calc(100vw - 40px);
+                height: 720px;           /* 调整高度，考虑所有间距 */
                 display: none;
                 overflow: hidden;
             }
@@ -128,7 +128,32 @@
             .toilet-panel-header {
                 display: flex;
                 justify-content: space-between;
+                align-items: center;
                 margin-bottom: 15px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid #eee;
+            }
+
+            .toilet-panel-close {
+                width: 24px;
+                height: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                cursor: pointer;
+                color: #666;
+                font-size: 16px;
+                transition: all 0.3s ease;
+                background: #f5f5f5;
+                border: 1px solid #eee;
+            }
+
+            .toilet-panel-close:hover {
+                background: #ff4d4f;
+                color: white;
+                border-color: #ff4d4f;
+                transform: rotate(90deg);
             }
 
             .toilet-panel-filters {
@@ -182,13 +207,12 @@
 
             .toilet-panel-content {
                 display: grid;
-                grid-template-columns: repeat(2, minmax(280px, 1fr));  /* 两列，每列最小280px */
-                gap: 20px;
+                grid-template-columns: repeat(2, minmax(280px, 1fr));
+                gap: 20px;              /* 卡片之间的间距 */
                 overflow-y: auto;
                 padding-right: 10px;
                 flex: 1;
-                min-height: 200px;
-                max-height: calc(90vh - 150px);
+                height: calc(100% - 120px);
             }
 
             /* 美化滚动条 */
@@ -397,6 +421,58 @@
                 width: 0;
                 height: 0;
             }
+
+            .layout-toggle {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 6px 10px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                cursor: pointer;
+                color: #666;
+                background: white;
+                transition: all 0.3s;
+            }
+
+            .layout-toggle svg {
+                width: 18px;
+                height: 18px;
+                transition: all 0.3s;
+            }
+
+            .layout-toggle:hover {
+                background: #f5f5f5;
+                border-color: #ccc;
+            }
+
+            .layout-toggle.active {
+                background: #e6f7ff;
+                border-color: #91d5ff;
+                color: #1890ff;
+            }
+
+            .layout-toggle.active svg {
+                fill: #1890ff;
+            }
+
+            /* 纵向布局样式 */
+            .toilet-panel-content.vertical {
+                grid-template-columns: minmax(280px, 480px);  /* 调整为合适的宽度 */
+                justify-content: center;
+                height: calc(100% - 120px);
+            }
+
+            .toilet-panel-content.vertical .toilet-floor {
+                width: 100%;
+                margin: 0 auto;
+            }
+
+            .header-controls {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
         `
     };
 
@@ -552,7 +628,17 @@
                 this.panel.innerHTML = `
                     <div class="toilet-panel-header">
                         <div>厕所状态监控</div>
-                        <div class="toilet-panel-close">✕</div>
+                        <div class="header-controls">
+                            <button class="layout-toggle" title="切换布局">
+                                <svg class="grid-icon" viewBox="0 0 24 24">
+                                    <path d="M3 3v8h8V3H3zm6 6H5V5h4v4zm-6 4v8h8v-8H3zm6 6H5v-4h4v4zm4-16v8h8V3h-8zm6 6h-4V5h4v4zm-6 4v8h8v-8h-8zm6 6h-4v-4h4v4z"/>
+                                </svg>
+                                <svg class="list-icon" viewBox="0 0 24 24" style="display: none;">
+                                    <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+                                </svg>
+                            </button>
+                            <div class="toilet-panel-close" title="关闭面板">✕</div>
+                        </div>
                     </div>
                     <div class="toilet-panel-filters">
                         <div class="filter-group">
@@ -652,6 +738,26 @@
             onlyVacantToggle.addEventListener('change', () => {
                 this.onlyVacant = onlyVacantToggle.checked;
                 console.log(`仅监听空闲: ${this.onlyVacant ? '开启' : '关闭'}`);
+            });
+
+            // 修改布局切换事件
+            const layoutToggle = this.panel.querySelector('.layout-toggle');
+            layoutToggle.addEventListener('click', () => {
+                const content = this.panel.querySelector('.toilet-panel-content');
+                const isVertical = content.classList.toggle('vertical');
+                
+                // 更新按钮状态
+                layoutToggle.classList.toggle('active', isVertical);
+                const gridIcon = layoutToggle.querySelector('.grid-icon');
+                const listIcon = layoutToggle.querySelector('.list-icon');
+                
+                if (isVertical) {
+                    gridIcon.style.display = 'none';
+                    listIcon.style.display = 'block';
+                } else {
+                    gridIcon.style.display = 'block';
+                    listIcon.style.display = 'none';
+                }
             });
         }
 
