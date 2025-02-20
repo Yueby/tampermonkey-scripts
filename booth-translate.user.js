@@ -5,6 +5,8 @@
 // @description  自动翻译 Booth 网站的多语言内容为中文
 // @author       Yueby
 // @match        https://*.booth.pm/*
+// @connect      raw.githubusercontent.com
+// @grant        GM_xmlhttpRequest
 // @run-at       document-idle
 // ==/UserScript==
 
@@ -45,24 +47,36 @@
 
         // 从配置文件加载配置
         async loadConfig() {
-            try {
-                const response = await fetch('booth-translate-config.json');
-                const config = await response.json();
-
-                this.translations = config.translations || {};
-                this.specialRules = config.specialRules || [];
-                this.selectors = {
-                    static: config.selectors?.static || [],
-                    dynamic: config.selectors?.dynamic || [],
-                    exclude: config.selectors?.exclude || [],
-                    attributes: {
-                        translate: config.selectors?.attributes?.translate || [],
-                        observe: config.selectors?.attributes?.observe || []
+            return new Promise((resolve, reject) => {
+                GM_xmlhttpRequest({
+                    method: 'GET',
+                    url: 'https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/booth-translate.user/booth-translate-config.json',
+                    onload: (response) => {
+                        try {
+                            const config = JSON.parse(response.responseText);
+                            this.translations = config.translations || {};
+                            this.specialRules = config.specialRules || [];
+                            this.selectors = {
+                                static: config.selectors?.static || [],
+                                dynamic: config.selectors?.dynamic || [],
+                                exclude: config.selectors?.exclude || [],
+                                attributes: {
+                                    translate: config.selectors?.attributes?.translate || [],
+                                    observe: config.selectors?.attributes?.observe || []
+                                }
+                            };
+                            resolve();
+                        } catch (error) {
+                            console.error('解析配置文件失败:', error);
+                            reject(error);
+                        }
+                    },
+                    onerror: (error) => {
+                        console.error('加载配置文件失败:', error);
+                        reject(error);
                     }
-                };
-            } catch (error) {
-                console.error('加载配置文件失败:', error);
-            }
+                });
+            });
         }
 
         // 获取所有选择器
@@ -322,7 +336,7 @@
             this.config.selectors.dynamic.forEach(selector => {
                 try {
                     document.querySelectorAll(`${selector}:not([data-translated])`).forEach(element => {
-                        if (this.shouldTranslate(element)) {
+                        if (this.translator.shouldTranslate(element)) {
                             this.translator.translateElement(element);
                             untranslatedCount++;
                         }
@@ -336,7 +350,7 @@
             this.config.selectors.attributes.translate.forEach(attr => {
                 try {
                     document.querySelectorAll(`[${attr}]:not([data-translated-${attr}])`).forEach(element => {
-                        if (this.shouldTranslate(element)) {
+                        if (this.translator.shouldTranslate(element)) {
                             this.translator.translateElement(element);
                             untranslatedCount++;
                         }
@@ -359,7 +373,7 @@
                 mutations.forEach(mutation => {
                     if (mutation.type === 'childList') {
                         mutation.addedNodes.forEach(node => {
-                            if (this.shouldTranslate(node)) {
+                            if (this.translator.shouldTranslate(node)) {
                                 changedElements.add(node);
                             }
                         });
@@ -370,13 +384,13 @@
                     }
                     else if (mutation.type === 'attributes') {
                         const target = mutation.target;
-                        if (this.shouldTranslate(target)) {
+                        if (this.translator.shouldTranslate(target)) {
                             changedElements.add(target);
                         }
                     }
                     else if (mutation.type === 'characterData') {
                         const target = mutation.target;
-                        if (this.shouldTranslate(target)) {
+                        if (this.translator.shouldTranslate(target)) {
                             changedElements.add(target);
                         }
                     }
@@ -490,7 +504,7 @@
                         try {
                             const elements = document.querySelectorAll(selector);
                             elements.forEach(element => {
-                                if (this.shouldTranslate(element)) {
+                                if (this.translator.shouldTranslate(element)) {
                                     this.translator.translateNode(element);
                                 }
                             });
