@@ -50,7 +50,7 @@
             return new Promise((resolve, reject) => {
                 GM_xmlhttpRequest({
                     method: 'GET',
-                    url: 'https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/booth-translate.user/booth-translate-config.json',
+                    url: 'https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/booth-scripts/booth-translate-config.json',
                     onload: (response) => {
                         try {
                             const config = JSON.parse(response.responseText);
