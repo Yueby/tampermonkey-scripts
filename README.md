@@ -2,6 +2,19 @@
 
 这是一个用于增强 Booth 网站功能的 Tampermonkey 脚本集合，包含多个功能模块。
 
+## 安装
+
+1. 安装 [Tampermonkey](https://www.tampermonkey.net/) 浏览器扩展
+
+2. 点击下方按钮安装对应脚本：
+
+| 脚本 | 安装 |
+|------|------|
+| Booth 网站功能增强 | [![安装](https://img.shields.io/badge/-点击安装-blue.svg)](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/booth-scripts/booth-extend.user.js) |
+| Booth 网站翻译助手 | [![安装](https://img.shields.io/badge/-点击安装-blue.svg)](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/booth-scripts/booth-translate.user.js) |
+
+3. 访问 Booth 网站即可自动启用功能
+
 ## 功能特性
 
 ### 1. Booth 网站功能增强
@@ -38,19 +51,6 @@
   - 选择性翻译
   - 缓存优化
   - 防重复处理
-
-## 安装
-
-1. 安装 [Tampermonkey](https://www.tampermonkey.net/) 浏览器扩展
-
-2. 点击下方按钮安装对应脚本：
-
-| 脚本 | 安装 |
-|------|------|
-| Booth 网站功能增强 | [![安装](https://img.shields.io/badge/-点击安装-blue.svg)](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/booth-scripts/booth-extend.user.js) |
-| Booth 网站翻译助手 | [![安装](https://img.shields.io/badge/-点击安装-blue.svg)](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/booth-scripts/booth-translate.user.js) |
-
-3. 访问 Booth 网站即可自动启用功能
 
 ## 注意事项
 
