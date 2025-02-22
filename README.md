@@ -4,19 +4,7 @@
 
 ## 功能特性
 
-### 1. Booth Cookies 提取器
-- 提取 Booth 网站必要的 session cookies
-- 美观的 Material Design 悬浮按钮
-- 自动提取和格式化 `_plaza_session_nktz7u` cookie
-- 提供完整的状态反馈：
-  - 加载动画
-  - 成功/失败状态显示
-  - 桌面通知提醒
-- 自动复制到剪贴板（JSON 格式）
-- 包含 cookie 值和过期时间信息
-- 支持所有 Booth 相关域名
-
-### 2. Booth 网站功能增强
+### 1. Booth 网站功能增强
 - 商品变体序号显示
   - 动态监控变体列表变化
   - 自动更新序号显示
@@ -34,7 +22,7 @@
   - 操作反馈优化
   - 批量处理能力
 
-### 3. Booth 网站翻译助手
+### 2. Booth 网站翻译助手
 - 智能检测页面语言，仅在非中文界面启动
 - 使用配置文件管理翻译规则
 - 支持多种内容翻译：
@@ -59,7 +47,6 @@
 
 | 脚本 | 安装 |
 |------|------|
-| Booth Cookies 提取器 | [![安装](https://img.shields.io/badge/-点击安装-blue.svg)](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/booth-scripts/booth-cookies.user.js) |
 | Booth 网站功能增强 | [![安装](https://img.shields.io/badge/-点击安装-blue.svg)](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/booth-scripts/booth-extend.user.js) |
 | Booth 网站翻译助手 | [![安装](https://img.shields.io/badge/-点击安装-blue.svg)](https://raw.githubusercontent.com/Yueby/tampermonkey-scripts/refs/heads/booth-scripts/booth-translate.user.js) |
 
