@@ -12,12 +12,6 @@
 (function() {
     'use strict';
 
-    // 常量配置
-    const SETTINGS = {
-        checkInterval: 600,
-        throttleDelay: 100
-    };
-
     // 工具类
     class Utils {
         // 节流函数
@@ -38,18 +32,12 @@
                 await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve));
             }
         }
-
-        // 等待指定时间
-        static sleep(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
     }
 
     // 功能增强类
     class BoothEnhancer {
         constructor() {
             this.initialized = false;
-            this.selectedVariations = new Set();
         }
 
         async init() {
@@ -57,20 +45,16 @@
                 await Utils.waitForDOMReady();
                 this.setupEventListeners();
                 this.addVariationNumbers();
+                this.addTagButtons();
+                this.addDashboardTagButtons();
                 this.initialized = true;
                 console.log('Booth功能增强已启动');
             } catch (error) {
                 console.error('Booth功能增强启动失败:', error);
-                this.handleError(error);
             }
         }
 
         setupEventListeners() {
-            // 添加事件监听器
-            document.addEventListener('click', Utils.throttle((e) => {
-                this.handleClick(e);
-            }, SETTINGS.throttleDelay));
-
             // 监听DOM变化
             const observer = new MutationObserver(Utils.throttle((mutations) => {
                 // 检查是否有拖动相关的变化
@@ -88,7 +72,7 @@
                 } else {
                     this.addVariationNumbers();
                 }
-            }, SETTINGS.throttleDelay));
+            }, 100));
 
             observer.observe(document.body, {
                 childList: true,
@@ -98,49 +82,7 @@
             // 监听拖动结束事件
             document.addEventListener('dragend', Utils.throttle(() => {
                 setTimeout(() => this.addVariationNumbers(), 100);
-            }, SETTINGS.throttleDelay));
-
-            // 添加批量操作按钮
-            this.addBatchOperationButtons();
-        }
-
-        addBatchOperationButtons() {
-            const container = document.querySelector('.js-variations');
-            if (!container || container.querySelector('.batch-operations')) return;
-
-            // 创建批量操作区域
-            const batchArea = document.createElement('div');
-            batchArea.className = 'batch-operations u-mb-500';
-            batchArea.style.padding = '10px';
-            batchArea.style.backgroundColor = '#f5f5f5';
-            batchArea.style.borderRadius = '4px';
-
-            // 添加全选按钮
-            const selectAllBtn = document.createElement('button');
-            selectAllBtn.type = 'button';
-            selectAllBtn.className = 'btn btn-default u-mr-300';
-            selectAllBtn.textContent = '全选';
-            selectAllBtn.onclick = () => this.selectAllVariations();
-
-            // 添加批量删除按钮
-            const deleteBtn = document.createElement('button');
-            deleteBtn.type = 'button';
-            deleteBtn.className = 'btn btn-danger u-mr-300';
-            deleteBtn.textContent = '批量删除';
-            deleteBtn.onclick = () => this.batchDeleteVariations();
-
-            // 添加批量复制按钮
-            const copyBtn = document.createElement('button');
-            copyBtn.type = 'button';
-            copyBtn.className = 'btn btn-primary';
-            copyBtn.textContent = '批量复制';
-            copyBtn.onclick = () => this.batchCopyVariations();
-
-            batchArea.appendChild(selectAllBtn);
-            batchArea.appendChild(deleteBtn);
-            batchArea.appendChild(copyBtn);
-
-            container.insertBefore(batchArea, container.firstChild);
+            }, 100));
         }
 
         addVariationNumbers() {
@@ -166,88 +108,212 @@
                     numberSpan.textContent = `#${index + 1}`;
                     titleArea.insertBefore(numberSpan, titleArea.firstChild);
                 }
-
-                // 添加选择框
-                if (!variation.querySelector('.variation-checkbox')) {
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.className = 'variation-checkbox';
-                    checkbox.style.marginRight = '8px';
-                    checkbox.onclick = (e) => {
-                        if (e.target.checked) {
-                            this.selectedVariations.add(variation);
-                        } else {
-                            this.selectedVariations.delete(variation);
-                        }
-                    };
-                    titleArea.insertBefore(checkbox, titleArea.firstChild);
-                }
             });
         }
 
-        handleClick(event) {
-            // 处理点击事件
-        }
+        // 添加标签操作按钮
+        addTagButtons() {
+            // 找到标签区域的标题
+            const tagLabel = document.querySelector('#item_tag .u-tpg-label');
+            if (!tagLabel) return;
 
-        handleError(error) {
-            console.error('Booth功能增强错误:', error);
-        }
+            const buttonContainer = document.createElement('div');
+            buttonContainer.className = 'u-d-inline-block u-ml-300';
+            buttonContainer.style.display = 'inline-flex';
+            buttonContainer.style.gap = '8px';
+            buttonContainer.style.verticalAlign = 'middle';
 
-        // 全选功能
-        selectAllVariations() {
-            const checkboxes = document.querySelectorAll('.variation-checkbox');
-            const isAllSelected = Array.from(checkboxes).every(cb => cb.checked);
+            // 复制按钮
+            const copyBtn = document.createElement('a');
+            copyBtn.type = 'button';
+            copyBtn.className = 'btn calm small';
+            copyBtn.innerHTML = '<i class="icon-copy"></i><span class="cmd-label">复制标签</span>';
+            copyBtn.onclick = () => this.copyTags();
+
+            // 粘贴按钮
+            const pasteBtn = document.createElement('a');
+            pasteBtn.type = 'button';
+            pasteBtn.className = 'btn calm small';
+            pasteBtn.innerHTML = '<i class="icon-paste"></i><span class="cmd-label">粘贴标签</span>';
+            pasteBtn.onclick = () => this.pasteTags();
+
+            // 清空按钮
+            const clearBtn = document.createElement('a');
+            clearBtn.type = 'button';
+            clearBtn.className = 'btn calm small';
+            clearBtn.innerHTML = '<i class="icon-cancel"></i><span class="cmd-label">清空标签</span>';
+            clearBtn.onclick = () => this.clearTags();
+
+            buttonContainer.appendChild(copyBtn);
+            buttonContainer.appendChild(pasteBtn);
+            buttonContainer.appendChild(clearBtn);
             
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = !isAllSelected;
-                const variation = checkbox.closest('.js-variation');
-                if (!isAllSelected) {
-                    this.selectedVariations.add(variation);
-                } else {
-                    this.selectedVariations.delete(variation);
+            // 将按钮添加到标签标题后面
+            tagLabel.parentNode.insertBefore(buttonContainer, tagLabel.nextSibling);
+        }
+
+        // 复制标签
+        copyTags() {
+            const tags = Array.from(document.querySelectorAll('.selectize-input .item'))
+                .map(item => item.getAttribute('data-value'))
+                .filter(Boolean);
+
+            if (tags.length === 0) {
+                alert('没有找到标签');
+                return;
+            }
+
+            navigator.clipboard.writeText(JSON.stringify(tags)).then(() => {
+                const copyBtn = document.querySelector('#item_tag .btn:first-child');
+                if (copyBtn) {
+                    const originalHtml = copyBtn.innerHTML;
+                    copyBtn.innerHTML = '<i class="icon-check"></i><span class="cmd-label">已复制</span>';
+                    copyBtn.classList.remove('calm');
+                    copyBtn.classList.add('primary');
+                    
+                    setTimeout(() => {
+                        copyBtn.innerHTML = originalHtml;
+                        copyBtn.classList.remove('primary');
+                        copyBtn.classList.add('calm');
+                    }, 1000);
                 }
             });
         }
 
-        // 批量删除功能
-        batchDeleteVariations() {
-            if (this.selectedVariations.size === 0) {
-                alert('请先选择要删除的项目');
-                return;
-            }
+        // 粘贴标签
+        async pasteTags() {
+            try {
+                const text = await navigator.clipboard.readText();
+                const tags = JSON.parse(text);
 
-            if (confirm(`确定要删除选中的 ${this.selectedVariations.size} 个项目吗？`)) {
-                this.selectedVariations.forEach(variation => {
-                    const deleteBtn = variation.querySelector('.variation-box-destroy');
-                    if (deleteBtn) deleteBtn.click();
+                if (!Array.isArray(tags)) {
+                    throw new Error('无效的标签数据');
+                }
+
+                // 获取 selectize 实例
+                const select = document.querySelector('.js-item-tags-array');
+                if (!select || !select.selectize) {
+                    throw new Error('找不到标签输入框');
+                }
+
+                // 清除现有标签
+                select.selectize.clear();
+
+                // 添加新标签
+                tags.forEach(tag => {
+                    select.selectize.addOption({ value: tag, text: tag });
+                    select.selectize.addItem(tag);
                 });
-                this.selectedVariations.clear();
+
+                // 显示成功提示
+                const pasteBtn = document.querySelector('#item_tag .btn:nth-child(2)');
+                if (pasteBtn) {
+                    const originalHtml = pasteBtn.innerHTML;
+                    pasteBtn.innerHTML = '<i class="icon-check"></i><span class="cmd-label">已粘贴</span>';
+                    pasteBtn.classList.remove('calm');
+                    pasteBtn.classList.add('primary');
+                    
+                    setTimeout(() => {
+                        pasteBtn.innerHTML = originalHtml;
+                        pasteBtn.classList.remove('primary');
+                        pasteBtn.classList.add('calm');
+                    }, 1000);
+                }
+            } catch (error) {
+                alert('粘贴标签失败：' + error.message);
             }
         }
 
-        // 批量复制功能
-        batchCopyVariations() {
-            if (this.selectedVariations.size === 0) {
-                alert('请先选择要复制的项目');
+        // 清空标签
+        clearTags() {
+            if (!confirm('确定要清空所有标签吗？')) return;
+
+            const select = document.querySelector('.js-item-tags-array');
+            if (!select || !select.selectize) {
+                alert('找不到标签输入框');
                 return;
             }
 
-            const copyInfo = Array.from(this.selectedVariations).map(variation => {
-                const nameInput = variation.querySelector('input[data-vv-name="variation.name"]');
-                const priceInput = variation.querySelector('input[data-vv-name="variation.price"]');
-                const files = Array.from(variation.querySelectorAll('.assigned-files a')).map(a => a.href);
+            // 清除现有标签
+            select.selectize.clear();
+
+            // 显示成功提示
+            const clearBtn = document.querySelector('#item_tag .btn:nth-child(3)');
+            if (clearBtn) {
+                const originalHtml = clearBtn.innerHTML;
+                clearBtn.innerHTML = '<i class="icon-check"></i><span class="cmd-label">已清空</span>';
+                clearBtn.classList.remove('calm');
+                clearBtn.classList.add('primary');
                 
-                return {
-                    name: nameInput?.value || '',
-                    price: priceInput?.value || '',
-                    files: files
+                setTimeout(() => {
+                    clearBtn.innerHTML = originalHtml;
+                    clearBtn.classList.remove('primary');
+                    clearBtn.classList.add('calm');
+                }, 1000);
+            }
+        }
+
+        // 添加商品页面标签操作按钮
+        addDashboardTagButtons() {
+            // 找到所有商品列表项
+            const items = document.querySelectorAll('.item-wrapper');
+            items.forEach(item => {
+                const tagList = item.querySelector('.dashboard-items-tags');
+                const footerActions = item.querySelector('.dashboard-item-footer-actions');
+                
+                if (!tagList || !footerActions || footerActions.querySelector('.tag-copy-btn')) return;
+
+                // 复制按钮
+                const copyBtn = document.createElement('a');
+                copyBtn.type = 'button';
+                copyBtn.className = 'btn calm small tag-copy-btn mr-8';
+                copyBtn.innerHTML = '<i class="icon-copy"></i><span class="cmd-label">复制标签</span>';
+                copyBtn.onclick = (e) => {
+                    e.preventDefault();
+                    this.copyDashboardTags(tagList);
                 };
+
+                // 将按钮添加到最前面
+                footerActions.insertBefore(copyBtn, footerActions.firstChild);
             });
 
-            // 将信息复制到剪贴板
-            const copyText = JSON.stringify(copyInfo, null, 2);
-            navigator.clipboard.writeText(copyText).then(() => {
-                alert('已复制到剪贴板！');
+            // 监听可能的动态加载
+            const observer = new MutationObserver(Utils.throttle(() => {
+                this.addDashboardTagButtons();
+            }, 100));
+
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        }
+
+        // 复制商品页面标签
+        copyDashboardTags(tagList) {
+            const tags = Array.from(tagList.querySelectorAll('.tag-text'))
+                .map(tag => tag.textContent)
+                .filter(Boolean);
+
+            if (tags.length === 0) {
+                alert('没有找到标签');
+                return;
+            }
+
+            navigator.clipboard.writeText(JSON.stringify(tags)).then(() => {
+                // 找到正确的复制按钮
+                const copyBtn = tagList.closest('.item-wrapper')?.querySelector('.tag-copy-btn');
+                if (copyBtn) {
+                    const originalHtml = copyBtn.innerHTML;
+                    copyBtn.innerHTML = '<i class="icon-check"></i><span class="cmd-label">已复制</span>';
+                    copyBtn.classList.remove('calm');
+                    copyBtn.classList.add('primary');
+                    
+                    setTimeout(() => {
+                        copyBtn.innerHTML = originalHtml;
+                        copyBtn.classList.remove('primary');
+                        copyBtn.classList.add('calm');
+                    }, 1000);
+                }
             });
         }
     }
