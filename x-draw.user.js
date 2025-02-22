@@ -5,12 +5,14 @@
 // @description  X Draw Helper, helps to quickly conduct draws
 // @author       Yueby
 // @match        https://x.com/*
-// @grant        GM_xmlhttpRequest
-// @connect      x.com
+// @require      https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
+
+    // 全局 AbortController
+    let currentAbortController = null;
 
     // 语言包定义
     const LANGUAGES = {
@@ -90,7 +92,10 @@
             no: '否',
             retweetType: '转发',
             likeType: '点赞',
-            madeWith: '开发者：❤️'
+            madeWith: '开发者：❤️',
+            loadingRetry: '加载失败，正在重试...',
+            loadingNoMore: '没有更多数据了',
+            loadingError: '加载出错，请稍后再试'
         },
         ja: {
             name: '日本語',
@@ -150,7 +155,7 @@
         updateQualifiedUsers() {
             const hasActiveFilters = Object.values(this.filters).some(value => value);
             const allUsers = new Map();
-            
+
             // 先处理转发用户
             this.retweets.forEach(user => {
                 allUsers.set(user.handle, { ...user, hasRetweet: true });
@@ -238,17 +243,17 @@
             ">
             </div>
         `;
-        
+
         const toggle = button.querySelector('.draw-helper-toggle');
-        
+
         toggle.addEventListener('mouseover', () => {
             toggle.style.right = '0';
         });
-        
+
         toggle.addEventListener('mouseout', () => {
             toggle.style.right = '-30px';
         });
-        
+
         toggle.addEventListener('click', handleDrawPanel);
         document.body.appendChild(button);
         UITranslator.translateContainer(button);
@@ -277,18 +282,205 @@
         }
     }
 
+    // Twitter API 请求方法
+    async function fetchTwitterData(endpoint, variables, csrfToken, loadingDiv, loadingKey, maxRetries = 3, abortController) {
+        const features = {
+            "profile_label_improvements_pcf_label_in_post_enabled": true,
+            "rweb_tipjar_consumption_enabled": true,
+            "responsive_web_graphql_exclude_directive_enabled": true,
+            "verified_phone_label_enabled": false,
+            "creator_subscriptions_tweet_preview_api_enabled": true,
+            "responsive_web_graphql_timeline_navigation_enabled": true,
+            "responsive_web_graphql_skip_user_profile_image_extensions_enabled": false,
+            "premium_content_api_read_enabled": false,
+            "communities_web_enable_tweet_community_results_fetch": true,
+            "c9s_tweet_anatomy_moderator_badge_enabled": true,
+            "responsive_web_grok_analyze_button_fetch_trends_enabled": false,
+            "responsive_web_grok_analyze_post_followups_enabled": false,
+            "responsive_web_jetfuel_frame": false,
+            "responsive_web_grok_share_attachment_enabled": true,
+            "articles_preview_enabled": true,
+            "responsive_web_edit_tweet_api_enabled": true,
+            "graphql_is_translatable_rweb_tweet_is_translatable_enabled": true,
+            "view_counts_everywhere_api_enabled": true,
+            "longform_notetweets_consumption_enabled": true,
+            "responsive_web_twitter_article_tweet_consumption_enabled": true,
+            "tweet_awards_web_tipping_enabled": false,
+            "responsive_web_grok_analysis_button_from_backend": true,
+            "creator_subscriptions_quote_tweet_preview_enabled": false,
+            "freedom_of_speech_not_reach_fetch_enabled": true,
+            "standardized_nudges_misinfo": true,
+            "tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled": true,
+            "rweb_video_timestamps_enabled": true,
+            "longform_notetweets_rich_text_read_enabled": true,
+            "longform_notetweets_inline_media_enabled": true,
+            "responsive_web_grok_image_annotation_enabled": false,
+            "responsive_web_enhance_cards_enabled": false
+        };
+
+        let hasNextPage = true;
+        let cursor = null;
+        const result = [];
+        let totalProcessed = 0;
+
+        const makeRequest = async (retryCount) => {
+            const vars = {
+                ...variables,
+                count: 20,
+                includePromotedContent: true,
+                cursor: cursor || undefined
+            };
+
+            try {
+                const response = await axios.get(
+                    `https://x.com/i/api/graphql/${endpoint}?variables=${encodeURIComponent(JSON.stringify(vars))}&features=${encodeURIComponent(JSON.stringify(features))}`,
+                    {
+                        headers: {
+                            'authorization': 'Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA',
+                            'x-csrf-token': csrfToken,
+                            'x-twitter-auth-type': 'OAuth2Session',
+                            'x-twitter-active-user': 'yes',
+                            'content-type': 'application/json'
+                        },
+                        signal: abortController?.signal
+                    }
+                );
+
+                return response.data;
+            } catch (error) {
+                if (error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
+                    throw new Error('请求被取消');
+                }
+                throw error;
+            }
+        };
+
+        while (hasNextPage) {
+            let lastError;
+            let success = false;
+
+            for (let retryCount = 0; retryCount < maxRetries && !success; retryCount++) {
+                try {
+                    const data = await makeRequest(retryCount);
+                    const timeline = data.data?.retweeters_timeline?.timeline || data.data?.favoriters_timeline?.timeline;
+                    
+                    // 检查是否有timeline数据
+                    if (!timeline) {
+                        console.log('没有timeline数据');
+                        hasNextPage = false;
+                        break;
+                    }
+
+                    // 检查是否有终止指令
+                    if (timeline.instructions.some(instruction => instruction.type === 'TimelineTerminateTimeline')) {
+                        console.log('遇到终止指令，数据获取完成');
+                        hasNextPage = false;
+                        break;
+                    }
+
+                    const addEntriesInstruction = timeline.instructions.find(instruction => 
+                        instruction.type === 'TimelineAddEntries'
+                    );
+
+                    // 如果没有AddEntries指令，说明没有更多数据
+                    if (!addEntriesInstruction?.entries) {
+                        console.log('没有更多数据');
+                        hasNextPage = false;
+                        break;
+                    }
+
+                    // 处理用户数据
+                    const users = addEntriesInstruction.entries
+                        .filter(entry => entry.entryId?.startsWith('user-'))
+                        .map(entry => {
+                            const result = entry.content?.itemContent?.user_results?.result;
+                            const legacy = result?.legacy || {};
+                            const restId = result?.rest_id;
+                            
+                            return {
+                                username: legacy.name || '未知用户',
+                                handle: legacy.screen_name || restId || '未知ID',
+                                avatarUrl: legacy.profile_image_url_https || '',
+                                bio: legacy.description || '',
+                                following: legacy.following || false,
+                                followed_by: legacy.followed_by || false
+                            };
+                        })
+                        .filter(user => user.handle !== '未知ID');
+
+                    if (users.length > 0) {
+                        totalProcessed += users.length;
+                        console.log(`获取到 ${users.length} 个用户数据（总计：${totalProcessed}）`);
+                        result.push(...users);
+                        
+                        // 更新加载提示
+                        if (loadingDiv && loadingKey) {
+                            loadingDiv.textContent = `${t(loadingKey)} (${totalProcessed})`;
+                        }
+                    } else {
+                        console.log('本页没有有效的用户数据');
+                    }
+
+                    // 获取下一页的cursor
+                    const bottomCursor = addEntriesInstruction.entries.find(entry => 
+                        entry.content?.cursorType === 'Bottom'
+                    );
+
+                    if (bottomCursor?.content?.value && bottomCursor.content.value !== cursor) {
+                        cursor = bottomCursor.content.value;
+                        console.log('获取到新的cursor:', cursor);
+                    } else {
+                        console.log('没有找到新的cursor，数据获取完成');
+                        hasNextPage = false;
+                    }
+
+                    success = true;
+
+                } catch (error) {
+                    lastError = error;
+                    console.warn(`请求失败，尝试重试 ${retryCount + 1}/${maxRetries}:`, error);
+                    
+                    if (retryCount === maxRetries - 1) {
+                        console.warn('达到最大重试次数，停止获取');
+                        hasNextPage = false;
+                        throw lastError;
+                    }
+                    
+                    await new Promise(resolve => setTimeout(resolve, 2000 * (retryCount + 1)));
+                }
+            }
+        }
+
+        console.log(`数据获取完成，总共获取到 ${result.length} 个用户`);
+        return result;
+    }
+
     // 获取互动用户数据
     async function getInteractionUsers() {
-        const currentUrl = window.location.href.replace(/\/$/, '');
-        const tweetId = currentUrl.split('/status/')[1].split('/')[0];
+        // 如果存在正在进行的请求，取消它
+        if (currentAbortController) {
+            currentAbortController.abort();
+        }
+
+        // 创建新的 AbortController
+        currentAbortController = new AbortController();
+
         const result = {
             retweets: [],
             likes: []
         };
 
+        let loadingDiv;
         try {
+            const currentUrl = window.location.href.replace(/\/$/, '');
+            const tweetId = currentUrl.split('/status/')[1]?.split('/')[0];
+            
+            if (!tweetId) {
+                throw new Error('无效的推文链接');
+            }
+
             // 创建加载状态提示
-            const loadingDiv = document.createElement('div');
+            loadingDiv = document.createElement('div');
             loadingDiv.style.cssText = `
                 position: fixed;
                 top: 50%;
@@ -309,220 +501,70 @@
             // 获取认证信息
             const csrfToken = document.cookie.split('; ').find(row => row.startsWith('ct0='))?.split('=')[1];
             if (!csrfToken) {
-                throw new Error('未找到CSRF Token');
+                throw new Error('未找到CSRF Token，请确保已登录');
             }
 
-            // 构建API请求参数
-            const features = {
-                "profile_label_improvements_pcf_label_in_post_enabled": true,
-                "rweb_tipjar_consumption_enabled": true,
-                "responsive_web_graphql_exclude_directive_enabled": true,
-                "verified_phone_label_enabled": false,
-                "creator_subscriptions_tweet_preview_api_enabled": true,
-                "responsive_web_graphql_timeline_navigation_enabled": true,
-                "responsive_web_graphql_skip_user_profile_image_extensions_enabled": false,
-                "premium_content_api_read_enabled": false,
-                "communities_web_enable_tweet_community_results_fetch": true,
-                "c9s_tweet_anatomy_moderator_badge_enabled": true,
-                "responsive_web_grok_analyze_button_fetch_trends_enabled": false,
-                "responsive_web_grok_analyze_post_followups_enabled": true,
-                "responsive_web_jetfuel_frame": false,
-                "responsive_web_grok_share_attachment_enabled": true,
-                "articles_preview_enabled": true,
-                "responsive_web_edit_tweet_api_enabled": true,
-                "graphql_is_translatable_rweb_tweet_is_translatable_enabled": true,
-                "view_counts_everywhere_api_enabled": true,
-                "longform_notetweets_consumption_enabled": true,
-                "responsive_web_twitter_article_tweet_consumption_enabled": true,
-                "tweet_awards_web_tipping_enabled": false,
-                "responsive_web_grok_analysis_button_from_backend": true,
-                "creator_subscriptions_quote_tweet_preview_enabled": false,
-                "freedom_of_speech_not_reach_fetch_enabled": true,
-                "standardized_nudges_misinfo": true,
-                "tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled": true,
-                "rweb_video_timestamps_enabled": true,
-                "longform_notetweets_rich_text_read_enabled": true,
-                "longform_notetweets_inline_media_enabled": true,
-                "responsive_web_grok_image_annotation_enabled": true,
-                "responsive_web_enhance_cards_enabled": false
-            };
+            // 并行获取转发和点赞数据
+            console.log('开始获取用户数据...');
+            const [retweets, likes] = await Promise.all([
+                // 获取转发数据
+                (async () => {
+                    loadingDiv.dataset.translationKey = 'loadingRetweets';
+                    UITranslator.translate(loadingDiv);
+                    console.log('开始获取转发用户数据...');
+                    const data = await fetchTwitterData(
+                        'niCJ2QyTuAgZWv01E7mqJQ/Retweeters',
+                        { tweetId },
+                        csrfToken,
+                        loadingDiv,
+                        'loadingRetweets',
+                        3,
+                        currentAbortController
+                    );
+                    console.log(`转发用户数据获取完成，原始数据数量：${data.length}`);
+                    return data;
+                })(),
+                // 获取点赞数据
+                (async () => {
+                    loadingDiv.dataset.translationKey = 'loadingLikes';
+                    UITranslator.translate(loadingDiv);
+                    console.log('开始获取点赞用户数据...');
+                    const data = await fetchTwitterData(
+                        'aLZ5wrqDYuDm9c_xNl667w/Favoriters',
+                        { tweetId },
+                        csrfToken,
+                        loadingDiv,
+                        'loadingLikes',
+                        3,
+                        currentAbortController
+                    );
+                    console.log(`点赞用户数据获取完成，原始数据数量：${data.length}`);
+                    return data;
+                })()
+            ]);
 
-            // 获取转发数据
-            loadingDiv.dataset.translationKey = 'loadingRetweets';
-            UITranslator.translate(loadingDiv);
-            
-            const retweetResponse = await fetch(`https://x.com/i/api/graphql/niCJ2QyTuAgZWv01E7mqJQ/Retweeters?variables=${encodeURIComponent(JSON.stringify({
-                "tweetId": tweetId,
-                "count": 100,
-                "includePromotedContent": true
-            }))}&features=${encodeURIComponent(JSON.stringify(features))}`, {
-                headers: {
-                    'authorization': 'Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA',
-                    'x-csrf-token': csrfToken,
-                    'x-twitter-auth-type': 'OAuth2Session',
-                    'x-twitter-active-user': 'yes',
-                    'content-type': 'application/json'
-                }
-            });
+            result.retweets = retweets;
+            result.likes = likes;
 
-            const retweetData = await retweetResponse.json();
-            if (retweetData.data?.retweeters_timeline?.timeline?.instructions?.[0]?.entries) {
-                result.retweets = retweetData.data.retweeters_timeline.timeline.instructions[0].entries
-                    .filter(entry => entry.content?.itemContent?.user_results?.result?.legacy)
-                    .map(entry => {
-                        const user = entry.content.itemContent.user_results.result.legacy;
-                        return {
-                            username: user.name,
-                            handle: user.screen_name,
-                            avatarUrl: user.profile_image_url_https,
-                            bio: user.description,
-                            following: user.following,
-                            followed_by: user.followed_by
-                        };
-                    });
-            }
+            // 统计重复用户
+            const retweetHandles = new Set(result.retweets.map(u => u.handle));
+            const likeHandles = new Set(result.likes.map(u => u.handle));
+            const duplicateCount = [...retweetHandles].filter(h => likeHandles.has(h)).length;
+            console.log(`同时转发和点赞的用户数量：${duplicateCount}`);
 
-            // 获取点赞数据
-            loadingDiv.dataset.translationKey = 'loadingLikes';
-            UITranslator.translate(loadingDiv);
-            
-            const likeResponse = await fetch(`https://x.com/i/api/graphql/aLZ5wrqDYuDm9c_xNl667w/Favoriters?variables=${encodeURIComponent(JSON.stringify({
-                "tweetId": tweetId,
-                "count": 100,
-                "includePromotedContent": true
-            }))}&features=${encodeURIComponent(JSON.stringify(features))}`, {
-                headers: {
-                    'authorization': 'Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA',
-                    'x-csrf-token': csrfToken,
-                    'x-twitter-auth-type': 'OAuth2Session',
-                    'x-twitter-active-user': 'yes',
-                    'content-type': 'application/json'
-                }
-            });
-
-            const likeData = await likeResponse.json();
-            if (likeData.data?.favoriters_timeline?.timeline?.instructions?.[0]?.entries) {
-                result.likes = likeData.data.favoriters_timeline.timeline.instructions[0].entries
-                    .filter(entry => entry.content?.itemContent?.user_results?.result?.legacy)
-                    .map(entry => {
-                        const user = entry.content.itemContent.user_results.result.legacy;
-                        return {
-                            username: user.name,
-                            handle: user.screen_name,
-                            avatarUrl: user.profile_image_url_https,
-                            bio: user.description,
-                            following: user.following,
-                            followed_by: user.followed_by
-                        };
-                    });
-            }
-
-            // TODO: 获取引用数据（需要相应的API端点）
-
-            // 移除加载提示
-            loadingDiv.remove();
         } catch (error) {
             console.error('获取互动数据时出错：', error);
             const messageDiv = document.createElement('div');
-            UITranslator.register(messageDiv, 'loginRequired');
+            UITranslator.register(messageDiv, error.message === '未找到CSRF Token，请确保已登录' ? 'loginRequired' : 'loadingError');
             alert(messageDiv.textContent);
+        } finally {
+            // 确保加载提示被移除
+            if (loadingDiv?.parentNode) {
+                loadingDiv.remove();
+            }
         }
 
         return result;
-    }
-
-    // 从页面获取用户数据
-    async function getUsersFromPage(window) {
-        const users = [];
-        try {
-            // 获取所有用户单元格
-            const userCells = window.document.querySelectorAll('[data-testid="UserCell"]');
-            
-            // 遍历每个用户单元格
-            userCells.forEach(cell => {
-                // 获取用户名（显示名）
-                const usernameElement = cell.querySelector('.css-1jxf684.r-bcqeeo.r-1ttztb7.r-qvutc0.r-poiln3:not([id])');
-                const username = usernameElement?.textContent?.trim();
-
-                // 获取用户账号（@后面的部分）
-                const handleElement = cell.querySelector('.css-1jxf684.r-bcqeeo.r-1ttztb7.r-qvutc0.r-poiln3:not([id])[style*="color: rgb(113, 118, 123)"]');
-                const handle = handleElement?.textContent?.trim();
-
-                // 获取用户头像URL
-                const avatarImg = cell.querySelector('img.css-9pa8cd');
-                const avatarUrl = avatarImg?.src;
-
-                // 获取用户简介
-                const bioElement = cell.querySelector('.css-1jxf684.r-bcqeeo.r-1ttztb7.r-qvutc0.r-poiln3:last-child');
-                const bio = bioElement?.textContent?.trim();
-
-                if (username && handle) {
-                    users.push({
-                        username: username,
-                        handle: handle.startsWith('@') ? handle.substring(1) : handle,
-                        avatarUrl: avatarUrl || '',
-                        bio: bio || ''
-                    });
-                }
-            });
-
-            // 检查是否需要滚动加载更多
-            const scrollContainer = window.document.scrollingElement;
-            if (scrollContainer) {
-                let lastHeight = scrollContainer.scrollHeight;
-                let attempts = 0;
-                const maxAttempts = 5; // 最多尝试加载5次
-
-                while (attempts < maxAttempts) {
-                    // 滚动到底部
-                    scrollContainer.scrollTo(0, scrollContainer.scrollHeight);
-                    
-                    // 等待新内容加载
-                    await new Promise(resolve => setTimeout(resolve, 1500));
-                    
-                    // 获取新加载的用户
-                    const newUserCells = window.document.querySelectorAll('[data-testid="UserCell"]');
-                    newUserCells.forEach(cell => {
-                        // 获取用户名（显示名）
-                        const usernameElement = cell.querySelector('.css-1jxf684.r-bcqeeo.r-1ttztb7.r-qvutc0.r-poiln3:not([id])');
-                        const username = usernameElement?.textContent?.trim();
-
-                        // 获取用户账号（@后面的部分）
-                        const handleElement = cell.querySelector('.css-1jxf684.r-bcqeeo.r-1ttztb7.r-qvutc0.r-poiln3:not([id])[style*="color: rgb(113, 118, 123)"]');
-                        const handle = handleElement?.textContent?.trim();
-
-                        // 获取用户头像URL
-                        const avatarImg = cell.querySelector('img.css-9pa8cd');
-                        const avatarUrl = avatarImg?.src;
-
-                        // 获取用户简介
-                        const bioElement = cell.querySelector('.css-1jxf684.r-bcqeeo.r-1ttztb7.r-qvutc0.r-poiln3:last-child');
-                        const bio = bioElement?.textContent?.trim();
-                        
-                        // 检查是否已存在
-                        if (username && handle && !users.some(u => u.handle === handle)) {
-                            users.push({
-                                username: username,
-                                handle: handle.startsWith('@') ? handle.substring(1) : handle,
-                                avatarUrl: avatarUrl || '',
-                                bio: bio || ''
-                            });
-                        }
-                    });
-
-                    // 检查是否已经到底
-                    if (scrollContainer.scrollHeight === lastHeight) {
-                        break;
-                    }
-                    
-                    lastHeight = scrollContainer.scrollHeight;
-                    attempts++;
-                }
-            }
-        } catch (error) {
-            console.error('解析用户数据时出错：', error);
-        }
-        return users;
     }
 
     // 处理面板显示
@@ -549,11 +591,11 @@
 
         // 获取互动数据
         const interactionData = await getInteractionUsers();
-        
+
         // 更新全局数据
         globalData.retweets = interactionData.retweets;
         globalData.likes = interactionData.likes;
-        
+
         // 创建面板
         const panelHTML = `
             <div class="draw-helper-panel" style="
@@ -835,10 +877,10 @@
                             <div style="color: #71767B; font-size: 14px;">@${user.handle}</div>
                         </div>
                         <div style="display: flex; gap: 4px;">
-                            ${user.following ? 
-                                `<span data-translation-key="following" style="color: #1D9BF0; font-size: 12px; border: 1px solid #1D9BF0; padding: 2px 6px; border-radius: 12px;"></span>` : ''}
-                            ${user.followed_by ? 
-                                `<span data-translation-key="followingYou" style="color: #00BA7C; font-size: 12px; border: 1px solid #00BA7C; padding: 2px 6px; border-radius: 12px;"></span>` : ''}
+                            ${user.following ?
+                `<span data-translation-key="following" style="color: #1D9BF0; font-size: 12px; border: 1px solid #1D9BF0; padding: 2px 6px; border-radius: 12px;"></span>` : ''}
+                            ${user.followed_by ?
+                `<span data-translation-key="followingYou" style="color: #00BA7C; font-size: 12px; border: 1px solid #00BA7C; padding: 2px 6px; border-radius: 12px;"></span>` : ''}
                         </div>
                     </div>
                     ${user.bio ? `<div style="color: #E7E9EA; font-size: 14px; margin-top: 4px;">${user.bio}</div>` : ''}
@@ -859,7 +901,7 @@
             t('following'),
             t('followingYou')
         ]];
-        
+
         // 添加转发用户
         data.retweets.forEach(user => {
             rows.push([
@@ -887,11 +929,11 @@
         });
 
         // 生成CSV内容
-        const csvContent = '\uFEFF' + rows.map(row => 
-            row.map(cell => 
-                typeof cell === 'string' ? 
-                `"${cell.replace(/"/g, '""')}"` : 
-                cell
+        const csvContent = '\uFEFF' + rows.map(row =>
+            row.map(cell =>
+                typeof cell === 'string' ?
+                    `"${cell.replace(/"/g, '""')}"` :
+                    cell
             ).join(',')
         ).join('\n');
 
@@ -900,7 +942,7 @@
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
         const now = new Date();
-        const timestamp = `${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours().toString().padStart(2,'0')}${now.getMinutes().toString().padStart(2,'0')}${now.getSeconds().toString().padStart(2,'0')}`;
+        const timestamp = `${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}${now.getSeconds().toString().padStart(2, '0')}`;
         link.download = `x_draw_data_${timestamp}.csv`;
         link.click();
     }
@@ -1098,7 +1140,7 @@
             newButton.addEventListener('click', () => {
                 const filter = newButton.dataset.filter;
                 globalData.toggleFilter(filter);
-                
+
                 // 更新按钮样式
                 if (globalData.filters[filter]) {
                     newButton.style.background = '#1D9BF0';
@@ -1257,22 +1299,22 @@
     function updateQualifiedUsersList(container) {
         const qualifiedUsersDiv = container.querySelector('.qualified-users');
         const qualifiedCountSpan = container.querySelector('.qualified-count');
-        
+
         if (qualifiedUsersDiv) {
             if (globalData.qualifiedUsers.length > 0) {
-                qualifiedUsersDiv.innerHTML = globalData.qualifiedUsers.map(user => 
+                qualifiedUsersDiv.innerHTML = globalData.qualifiedUsers.map(user =>
                     `<div style="margin-bottom: 4px;">@${user.handle}</div>`
                 ).join('');
             } else {
                 const noUsersDiv = document.createElement('div');
                 noUsersDiv.style.cssText = 'text-align: center; color: #71767B;';
-                noUsersDiv.dataset.translationKey = 'noQualifiedUsers';
+                noUsersDiv.dataset.translationKey = 'noUsers';
                 qualifiedUsersDiv.innerHTML = '';
                 qualifiedUsersDiv.appendChild(noUsersDiv);
                 UITranslator.translate(noUsersDiv);
             }
         }
-        
+
         if (qualifiedCountSpan) {
             qualifiedCountSpan.textContent = globalData.qualifiedUsers.length;
         }
