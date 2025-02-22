@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Booth 网站翻译助手
 // @namespace    https://bbs.tampermonkey.net.cn/
-// @version      0.1.1
+// @version      0.1.2
 // @description  自动翻译 Booth 网站的多语言内容为中文
 // @author       Yueby
 // @match        https://*.booth.pm/*
@@ -107,6 +107,11 @@
 
         // 检查元素是否需要翻译
         shouldTranslate(element) {
+            // 如果元素已经被翻译，不需要重复翻译
+            if (element.dataset?.translated === 'true') {
+                return false;
+            }
+
             // 检查是否在排除列表中
             const isExcluded = (el) => {
                 if (!el || !el.matches) return false;
@@ -262,7 +267,7 @@
 
             // 只有在实际进行了翻译时才标记元素
             if (hasTranslation) {
-                element.setAttribute('data-translated', 'true');
+                element.dataset.translated = 'true';
             }
         }
     }
@@ -306,6 +311,26 @@
             this.observer = new MutationObserver(this.throttledHandle);
             this.processing = false;
             this.checkInterval = null;
+            
+            // 创建 IntersectionObserver 用于监控元素可见性
+            this.visibilityObserver = new IntersectionObserver(
+                (entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting && !entry.target.dataset.translated) {
+                            // 元素可见且未翻译时进行翻译
+                            this.translator.translateNode(entry.target);
+                            // 标记已翻译
+                            entry.target.dataset.translated = 'true';
+                            // 停止观察已翻译的元素
+                            this.visibilityObserver.unobserve(entry.target);
+                        }
+                    });
+                },
+                { 
+                    threshold: 0.1,  // 元素10%可见时触发
+                    rootMargin: '100px'  // 提前100px开始加载，提供更平滑的体验
+                }
+            );
         }
 
         start() {
@@ -319,48 +344,24 @@
                 attributeOldValue: true
             });
 
-            // 启动定期检查
-            this.startPeriodicCheck();
+            // 初始处理可见元素
+            this.observeVisibleElements();
         }
 
-        startPeriodicCheck() {
-            this.checkInterval = setInterval(() => {
-                this.checkUntranslatedElements();
-            }, SETTINGS.checkInterval);
-        }
-
-        checkUntranslatedElements() {
-            let untranslatedCount = 0;
-
-            // 检查所有动态内容
-            this.config.selectors.dynamic.forEach(selector => {
+        // 观察可见元素
+        observeVisibleElements() {
+            const allSelectors = this.config.getAllSelectors();
+            allSelectors.forEach(selector => {
                 try {
-                    document.querySelectorAll(`${selector}:not([data-translated])`).forEach(element => {
-                        if (this.translator.shouldTranslate(element)) {
-                            this.translator.translateElement(element);
-                            untranslatedCount++;
+                    document.querySelectorAll(selector).forEach(element => {
+                        if (!element.dataset.translated && this.translator.shouldTranslate(element)) {
+                            this.visibilityObserver.observe(element);
                         }
                     });
                 } catch (error) {
                     console.error(`选择器 ${selector} 查询失败:`, error);
                 }
             });
-
-            // 检查特定属性
-            this.config.selectors.attributes.translate.forEach(attr => {
-                try {
-                    document.querySelectorAll(`[${attr}]:not([data-translated-${attr}])`).forEach(element => {
-                        if (this.translator.shouldTranslate(element)) {
-                            this.translator.translateElement(element);
-                            untranslatedCount++;
-                        }
-                    });
-                } catch (error) {
-                    console.error(`属性 ${attr} 查询失败:`, error);
-                }
-            });
-
-            return untranslatedCount;
         }
 
         handleMutations(mutations) {
@@ -368,36 +369,36 @@
             this.processing = true;
 
             try {
-                const changedElements = new Set();
-
                 mutations.forEach(mutation => {
                     if (mutation.type === 'childList') {
                         mutation.addedNodes.forEach(node => {
-                            if (this.translator.shouldTranslate(node)) {
-                                changedElements.add(node);
+                            if (node.nodeType === Node.ELEMENT_NODE) {
+                                // 对新添加的元素应用可见性观察
+                                if (this.translator.shouldTranslate(node)) {
+                                    this.visibilityObserver.observe(node);
+                                }
+                                // 处理子元素
+                                const allSelectors = this.config.getAllSelectors();
+                                allSelectors.forEach(selector => {
+                                    try {
+                                        node.querySelectorAll(selector).forEach(element => {
+                                            if (!element.dataset.translated && this.translator.shouldTranslate(element)) {
+                                                this.visibilityObserver.observe(element);
+                                            }
+                                        });
+                                    } catch (error) {
+                                        console.error(`选择器 ${selector} 查询失败:`, error);
+                                    }
+                                });
                             }
                         });
-
-                        if (mutation.removedNodes.length > 0 && mutation.target) {
-                            changedElements.add(mutation.target);
-                        }
                     }
                     else if (mutation.type === 'attributes') {
                         const target = mutation.target;
-                        if (this.translator.shouldTranslate(target)) {
-                            changedElements.add(target);
+                        if (!target.dataset.translated && this.translator.shouldTranslate(target)) {
+                            this.visibilityObserver.observe(target);
                         }
                     }
-                    else if (mutation.type === 'characterData') {
-                        const target = mutation.target;
-                        if (this.translator.shouldTranslate(target)) {
-                            changedElements.add(target);
-                        }
-                    }
-                });
-
-                changedElements.forEach(element => {
-                    this.translator.translateNode(element);
                 });
             } catch (error) {
                 console.error('处理DOM变化时出错:', error);
@@ -406,16 +407,13 @@
             }
         }
 
-        stopPeriodicCheck() {
+        disconnect() {
+            this.observer.disconnect();
+            this.visibilityObserver.disconnect();
             if (this.checkInterval) {
                 clearInterval(this.checkInterval);
                 this.checkInterval = null;
             }
-        }
-
-        disconnect() {
-            this.observer.disconnect();
-            this.stopPeriodicCheck();
         }
     }
 
@@ -452,21 +450,15 @@
 
         async start() {
             try {
-                // 等待DOM加载完成
                 await Utils.waitForDOMReady();
 
-                // 等待语言选择器加载并检查语言设置
                 const isChineseUI = await LanguageDetector.detectLanguage();
                 if (!isChineseUI) {
                     console.log('当前不是简体中文界面，翻译助手未启动');
                     return;
                 }
 
-                // 加载配置
                 await this.config.loadConfig();
-
-                // 初始化翻译
-                this.translateAll();
 
                 // 启动观察器
                 this.observer.start();
@@ -490,33 +482,6 @@
         restart() {
             this.stop();
             this.start();
-        }
-
-        translateAll() {
-            try {
-                const allSelectors = this.config.getAllSelectors();
-
-                for (let i = 0; i < allSelectors.length; i += SETTINGS.batchSize) {
-                    const batchSelectors = allSelectors.slice(i, i + SETTINGS.batchSize);
-
-                    // 单独处理每个选择器
-                    batchSelectors.forEach(selector => {
-                        try {
-                            const elements = document.querySelectorAll(selector);
-                            elements.forEach(element => {
-                                if (this.translator.shouldTranslate(element)) {
-                                    this.translator.translateNode(element);
-                                }
-                            });
-                        } catch (error) {
-                            console.error(`选择器 "${selector}" 处理失败:`, error);
-                        }
-                    });
-                }
-            } catch (error) {
-                console.error('翻译过程中发生错误:', error);
-                this.handleError(error);
-            }
         }
 
         handleError(error) {

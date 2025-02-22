@@ -5,11 +5,16 @@
 ## 功能特性
 
 ### 1. Booth Cookies 提取器
-- 提取 Booth 网站必要的 cookies 信息
-- 悬浮按钮快速提取 session
-- 自动复制到剪贴板
-- 桌面通知提醒
-- 美化的 UI 界面和加载动画
+- 提取 Booth 网站必要的 session cookies
+- 美观的 Material Design 悬浮按钮
+- 自动提取和格式化 `_plaza_session_nktz7u` cookie
+- 提供完整的状态反馈：
+  - 加载动画
+  - 成功/失败状态显示
+  - 桌面通知提醒
+- 自动复制到剪贴板（JSON 格式）
+- 包含 cookie 值和过期时间信息
+- 支持所有 Booth 相关域名
 
 ### 2. Booth 网站功能增强
 - 商品变体序号显示
