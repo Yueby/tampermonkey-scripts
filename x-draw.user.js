@@ -621,7 +621,7 @@
                     display: flex;
                     border-bottom: 1px solid #38444D;
                 ">
-                    <button class="draw-helper-tab" data-tab="retweets" data-translation-key="retweets" data-translation-params='{"count": ${interactionData.retweets.length}}' style="
+                    <button class="draw-helper-tab" data-tab="retweets" style="
                         flex: 1;
                         padding: 12px;
                         background: none;
@@ -630,10 +630,32 @@
                         cursor: pointer;
                         border-bottom: 2px solid #1D9BF0;
                         text-align: center;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        gap: 4px;
                     ">
-                        <span></span>
+                        <span data-translation-key="retweets"></span>
+                        <span style="font-size: 12px; color: #71767B;">${interactionData.retweets.length}</span>
                     </button>
-                    <button class="draw-helper-tab" data-tab="likes" data-translation-key="likes" data-translation-params='{"count": ${interactionData.likes.length}}' style="
+                    <button class="draw-helper-tab" data-tab="likes" style="
+                        flex: 1;
+                        padding: 12px;
+                        background: none;
+                        border: none;
+                        color: #71767B;
+                        cursor: pointer;
+                        border-bottom: 2px solid transparent;
+                        text-align: center;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        gap: 4px;
+                    ">
+                        <span data-translation-key="likes"></span>
+                        <span style="font-size: 12px; color: #71767B;">${interactionData.likes.length}</span>
+                    </button>
+                    <button class="draw-helper-tab" data-tab="draw" style="
                         flex: 1;
                         padding: 12px;
                         background: none;
@@ -643,19 +665,7 @@
                         border-bottom: 2px solid transparent;
                         text-align: center;
                     ">
-                        <span></span>
-                    </button>
-                    <button class="draw-helper-tab" data-tab="draw" data-translation-key="draw" style="
-                        flex: 1;
-                        padding: 12px;
-                        background: none;
-                        border: none;
-                        color: #71767B;
-                        cursor: pointer;
-                        border-bottom: 2px solid transparent;
-                        text-align: center;
-                    ">
-                        <span></span>
+                        <span data-translation-key="draw"></span>
                     </button>
                 </div>
 
@@ -746,9 +756,19 @@
                     tabs.forEach(t => {
                         t.style.color = '#71767B';
                         t.style.borderBottom = '2px solid transparent';
+                        // 更新数字颜色
+                        const countSpan = t.querySelector('span:last-child');
+                        if (countSpan) {
+                            countSpan.style.color = '#71767B';
+                        }
                     });
                     tab.style.color = 'white';
                     tab.style.borderBottom = '2px solid #1D9BF0';
+                    // 更新当前标签的数字颜色
+                    const countSpan = tab.querySelector('span:last-child');
+                    if (countSpan) {
+                        countSpan.style.color = '#1D9BF0';
+                    }
 
                     // 更新内容
                     if (tab.dataset.tab === 'draw') {
