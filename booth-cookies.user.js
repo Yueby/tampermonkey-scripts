@@ -3,7 +3,7 @@
 // @namespace    http://tampermonkey.net/
 // @version      1.0
 // @description  从Booth网站提取必要的cookies
-// @author       Your name
+// @author       Yueby
 // @match        https://manage.booth.pm/*
 // @match        https://booth.pm/*
 // @match        https://accounts.booth.pm/*
