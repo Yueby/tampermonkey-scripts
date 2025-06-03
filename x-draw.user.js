@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         X Draw Helper
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      0.2
 // @description  X Draw Helper, helps to quickly conduct draws
 // @author       Yueby
 // @match        https://x.com/*
