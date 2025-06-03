@@ -29,6 +29,7 @@
             draw: 'Draw',
             export: 'Export',
             close: 'Close',
+            notify: 'Notify',
             filters: 'Filters',
             followingMe: 'Following me',
             hasRetweeted: 'Has retweeted',
@@ -53,7 +54,8 @@
             no: 'No',
             retweetType: 'Retweet',
             likeType: 'Like',
-            madeWith: 'Made with ❤️ by'
+            madeWith: 'Made with ❤️ by',
+            winnerNotice: 'Congratulations to the following winners:\n'
         },
         zh: {
             name: '中文',
@@ -68,6 +70,7 @@
             draw: '抽奖',
             export: '导出',
             close: '关闭',
+            notify: '通知',
             filters: '筛选条件',
             followingMe: '已关注我',
             hasRetweeted: '已转发',
@@ -95,7 +98,8 @@
             madeWith: '开发者：❤️',
             loadingRetry: '加载失败，正在重试...',
             loadingNoMore: '没有更多数据了',
-            loadingError: '加载出错，请稍后再试'
+            loadingError: '加载出错，请稍后再试',
+            winnerNotice: '恭喜以下用户获奖：\n'
         },
         ja: {
             name: '日本語',
@@ -110,6 +114,7 @@
             draw: '抽選',
             export: 'エクスポート',
             close: '閉じる',
+            notify: '通知',
             filters: 'フィルター',
             followingMe: 'フォロワー',
             hasRetweeted: 'リツイート済',
@@ -134,7 +139,8 @@
             no: 'いいえ',
             retweetType: 'リツイート',
             likeType: 'いいね',
-            madeWith: '開発者：❤️'
+            madeWith: '開発者：❤️',
+            winnerNotice: '当選者は以下の通りです：\n'
         }
     };
 
@@ -1267,8 +1273,12 @@
         buttonDiv.style.cssText = `
             padding: 16px;
             border-top: 1px solid #38444D;
-            text-align: center;
+            display: flex;
+            justify-content: center;
+            gap: 16px;
         `;
+
+        // 关闭按钮
         const closeButton = document.createElement('button');
         closeButton.dataset.translationKey = 'close';
         closeButton.style.cssText = `
@@ -1289,6 +1299,50 @@
         });
         closeButton.addEventListener('click', () => resultDiv.remove());
         buttonDiv.appendChild(closeButton);
+
+        // 通知按钮
+        const notifyButton = document.createElement('button');
+        notifyButton.dataset.translationKey = 'notify';
+        notifyButton.style.cssText = `
+            padding: 8px 24px;
+            background: #00BA7C;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        `;
+        notifyButton.addEventListener('mouseover', () => {
+            notifyButton.style.backgroundColor = '#00A36D';
+        });
+        notifyButton.addEventListener('mouseout', () => {
+            notifyButton.style.backgroundColor = '#00BA7C';
+        });
+        
+        // 通知按钮点击事件
+        notifyButton.addEventListener('click', () => {
+            // 获取当前URL中的推文ID
+            const currentUrl = window.location.href;
+            const tweetId = currentUrl.split('/status/')[1]?.split('/')[0];
+            
+            if (!tweetId) {
+                alert('无法获取推文ID');
+                return;
+            }
+            
+            // 构建@获奖者的文本
+            const winnersText = winners.map(user => `@${user.handle}`).join(' ');
+            const notifyText = t('winnerNotice') + winnersText;
+            
+            // 创建意图URL
+            const intentUrl = `https://x.com/intent/post?in_reply_to=${tweetId}&text=${encodeURIComponent(notifyText)}`;
+            
+            // 在新标签页中打开
+            window.open(intentUrl, '_blank');
+        });
+        
+        buttonDiv.appendChild(notifyButton);
         resultDiv.appendChild(buttonDiv);
 
         document.body.appendChild(resultDiv);
